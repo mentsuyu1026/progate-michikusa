@@ -1,75 +1,57 @@
-# React + TypeScript + Vite
+# michikusa(仮)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+普段訪れない地域に来た際、その地域の歴史・文化・特徴をLLMが解説してくれるWebアプリ。
 
-Currently, two official plugins are available:
+## セットアップ
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+git clone https://github.com/<オーナー名>/<リポジトリ名>.git
+cd <リポジトリ名>
+npm install
+npm run dev
+```
+.env を作成してAPIキーなど環境変数を記入
+(なお.envは絶対にコミットしてはいけません。.gitignoreがあるので問題ないとは思いますが)
+`http://localhost:5173` で確認。
 
-## React Compiler
+## 開発の鉄則
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+**この2つだけ守ってください。**
 
-## Expanding the ESLint configuration
+1. **main に直接プッシュしない**(保護がかかっているので物理的にできません)
+2. **ブランチを切る前に必ず main を pull する**
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+これを守らないとコンフリクトが発生し時間を消費することになります。
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 作業の流れ
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+```bash
+# 1. main を最新に
+git checkout main
+git pull
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# 2. ブランチを切る
+git checkout -b feature/作業内容
 
+# 3. 作業 → コミット → プッシュ
+git add .
+git commit -m "メッセージ"
+git push -u origin feature/作業内容
+
+# 4. GitHub で PR 作成 → プレビューURLで確認 → マージ
+
+# 5. 次の作業に入る前に必ず main を pull(ここに戻る)
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+ブランチ名:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+`feature/xxx`: 何かしらの機能追加,
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+`fix/xxx`: 何かしらのバグ修正, 
 
-```
+`docs/xxx`: 何かしらのドキュメント
+
+## 困ったら
+
+- まず `git status` を見る
+- 最悪頑張れば何とか戻せます
