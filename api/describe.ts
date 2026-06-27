@@ -8,9 +8,25 @@
 //
 // APIキーはフロントに出さず、Vercelの環境変数 GEMINI_API_KEY からサーバー側でのみ読む(仕様書9章)。
 
-import { generateAreaDescription } from "./_lib/describe.js";
+import { generateAreaDescription } from "./_lib/describe.ts";
 
-export default async function handler(req, res) {
+// @vercel/node に依存せず動かすための最小限の型(req/res の使う部分だけ)。
+type ApiRequest = {
+  method?: string;
+  body?: unknown;
+};
+type ApiResponse = {
+  status: (code: number) => ApiResponse;
+  json: (data: unknown) => void;
+};
+
+type DescribeBody = {
+  areaName?: string;
+  lat?: number;
+  lng?: number;
+};
+
+export default async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
   if (req.method !== "POST") {
     res.status(405).json({ error: "POST のみ対応しています。" });
     return;
@@ -18,8 +34,10 @@ export default async function handler(req, res) {
 
   try {
     // Vercel は JSON ボディを自動パースするが、文字列で来る場合に備えて両対応。
-    const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
-    let { areaName, lat, lng } = body;
+    const body: DescribeBody =
+      typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body as DescribeBody) ?? {};
+    let { areaName } = body;
+    const { lat, lng } = body;
 
     // 座標が来た場合は逆ジオコーディングで地域名に変換(Nominatim連携)。
     if (!areaName && lat != null && lng != null) {
@@ -36,17 +54,15 @@ export default async function handler(req, res) {
   } catch (err) {
     // レスポンスが崩れたとき等のエラーハンドリング(仕様書STEP5)。
     console.error("[/api/describe] error:", err);
-    res.status(500).json({ error: err?.message ?? "解説の生成に失敗しました。" });
+    const message = err instanceof Error ? err.message : "解説の生成に失敗しました。";
+    res.status(500).json({ error: message });
   }
 }
 
 /**
  * Nominatim(OpenStreetMap)で座標 → 地域名に変換する。
- * @param {number} lat
- * @param {number} lng
- * @returns {Promise<string>}
  */
-async function reverseGeocode(lat, lng) {
+async function reverseGeocode(lat: number, lng: number): Promise<string> {
   const url =
     `https://nominatim.openstreetmap.org/reverse?format=jsonv2` +
     `&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}` +

@@ -11,7 +11,7 @@
 import { writeFile, mkdir, readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { generateAreaDescription } from "../api/_lib/describe.js";
+import { generateAreaDescription } from "../api/_lib/describe.ts";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = join(__dirname, "..");

@@ -1,8 +1,37 @@
 // michikusa - LLM担当(2人目)
 // 地域名を Gemini に渡し、特色・歴史・文化の解説を構造化JSONで生成する共有ロジック。
-// Vercel Function (api/describe.js) とローカルCLI (scripts/generate.mjs) の両方から使う。
+// Vercel Function (api/describe.ts) とローカルCLI (scripts/generate.mjs) の両方から使う。
 //
 // 依存ゼロ・Node18+ の標準 fetch のみで動く。APIキーは呼び出し側から渡す(env管理は呼び出し側の責務)。
+
+/** 生成された解説の構造化結果。STEP2フォーマット + フロント互換フィールド。 */
+export type AreaDescription = {
+  areaName: string;
+  summary: string;
+  history: string;
+  food: string;
+  souvenir: string;
+  celebrity: string;
+  description: string;
+};
+
+type GenerateOptions = {
+  /** Gemini APIキー(未指定なら process.env.GEMINI_API_KEY) */
+  apiKey?: string;
+  /** モデル名(未指定なら GEMINI_MODEL env か既定値) */
+  model?: string;
+  /** テスト用の fetch 差し替え */
+  fetchImpl?: typeof fetch;
+};
+
+/** Gemini が返す生のJSON(description はこちらでは作らない)。 */
+type GeminiPayload = {
+  summary: string;
+  history: string;
+  food: string;
+  souvenir: string;
+  celebrity: string;
+};
 
 // 使用する Gemini モデル(無料枠・高速)。必要なら GEMINI_MODEL env で上書き可。
 const DEFAULT_MODEL = "gemini-2.0-flash";
@@ -24,9 +53,8 @@ const RESPONSE_SCHEMA = {
 /**
  * Gemini に渡すプロンプトを組み立てる。
  * リスク対策(仕様書9章): 不確かなことは断定させない。
- * @param {string} areaName 例: "東京都台東区浅草"
  */
-export function buildPrompt(areaName) {
+export function buildPrompt(areaName: string): string {
   return [
     `あなたは日本各地の観光案内に詳しいガイドです。`,
     `「${areaName}」について、その土地を初めて訪れた旅行者向けに、特色・歴史・文化をやさしく紹介してください。`,
@@ -41,14 +69,11 @@ export function buildPrompt(areaName) {
 
 /**
  * 地域名から構造化された解説JSONを生成する。
- * @param {string} areaName 地域名
- * @param {object} [opts]
- * @param {string} [opts.apiKey] Gemini APIキー(未指定なら process.env.GEMINI_API_KEY)
- * @param {string} [opts.model] モデル名(未指定なら GEMINI_MODEL env か既定値)
- * @param {typeof fetch} [opts.fetchImpl] テスト用の fetch 差し替え
- * @returns {Promise<{areaName:string, summary:string, history:string, food:string, souvenir:string, celebrity:string, description:string}>}
  */
-export async function generateAreaDescription(areaName, opts = {}) {
+export async function generateAreaDescription(
+  areaName: string,
+  opts: GenerateOptions = {}
+): Promise<AreaDescription> {
   const name = (areaName ?? "").trim();
   if (!name) {
     throw new Error("areaName が空です。地域名を指定してください。");
@@ -86,15 +111,15 @@ export async function generateAreaDescription(areaName, opts = {}) {
   }
 
   const data = await res.json();
-  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  const text: string | undefined = data?.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!text) {
     throw new Error("Gemini から有効な応答が得られませんでした。");
   }
 
   // responseSchema 指定時も念のため try/catch でパースエラーに備える(仕様書STEP5)。
-  let parsed;
+  let parsed: GeminiPayload;
   try {
-    parsed = JSON.parse(text);
+    parsed = JSON.parse(text) as GeminiPayload;
   } catch {
     throw new Error(`応答のJSONパースに失敗しました: ${text.slice(0, 300)}`);
   }
