@@ -26,3 +26,7 @@ dist-ssr
 # Environment variables
 .env
 .env.*
+!.env.example
+
+# 生成された解説JSONの出力先(LLM担当のローカル確認用)
+output
