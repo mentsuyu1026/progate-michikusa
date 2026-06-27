@@ -4,13 +4,12 @@
 // 追加する分にはぶっ壊れることはないと思いますが、何かしらを削除すると動かなくなるかもなので気を付けましょう
 // 必要な型に関しては適宜追加してもよいと思います
 
-
 /**
  * 緯度と経度のペアについての型
  * Geolocation APIから取得した座標をアプリ内で扱う共通形式に変換したもの
  * lat = 緯度、lng = 経度
  */
 export type Coordinates = {
-    lat: number;
-    lng: number;
+  lat: number;
+  lng: number;
 };
