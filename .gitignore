@@ -26,3 +26,10 @@ dist-ssr
 # Environment variables
 .env
 .env.*
+!.env.example
+
+# 生成された解説JSONの出力先(LLM担当のローカル確認用)
+output
+
+# LLM担当のローカル確認用CLI(リポジトリには含めない。内容はチーム外で別途共有)
+generate.mjs

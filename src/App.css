@@ -1,8 +1,12 @@
+<<<<<<< HEAD
 /* 画面全体のレイアウト */
+=======
+>>>>>>> 9b1440d8572f3a7b70979eb44d9fd1a33a53db61
 .container {
   display: flex;
   flex-direction: column;
   align-items: center;
+<<<<<<< HEAD
   gap: 24px;
   padding: 32px 20px 64px;
   flex-grow: 1;
@@ -112,4 +116,21 @@
   .cards {
     grid-template-columns: 1fr;
   }
+=======
+  gap: 16px;
+}
+
+.card {
+  background: aquamarine;
+  border-radius: 12px; /*角丸*/
+  padding: 16px; /*内側の余白*/
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /*影*/
+  width: 100%;
+}
+
+.button {
+  background-color: aquamarine;
+  border: none;
+  padding: 10px;
+>>>>>>> 9b1440d8572f3a7b70979eb44d9fd1a33a53db61
 }
