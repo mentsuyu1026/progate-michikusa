@@ -33,3 +33,19 @@ export type Coordinates = {
   lng: number;
 >>>>>>> 9b1440d8572f3a7b70979eb44d9fd1a33a53db61
 };
+
+/**
+ * LLMが生成する地域解説の型(/api/describe のレスポンス)
+ * summary/history/food/souvenir/celebrity = STEP2で決めた出力フォーマット
+ * areaName/description = フロント互換の概要フィールド
+ * ※ api/_lib/describe.ts の AreaDescription と同じ形。片方を変えたらもう片方も合わせること
+ */
+export type AreaDescription = {
+  areaName: string;
+  summary: string;
+  history: string;
+  food: string;
+  souvenir: string;
+  celebrity: string;
+  description: string;
+};
