@@ -1,77 +1,34 @@
-<<<<<<< HEAD
-import type { Coords } from '../types';
+// src/hooks/useGeolocation.ts
+import type { Coordinates } from '../types';
 
-// GPS 取得（Promise 版）。
-// ※ ひらつかくんが本実装を書く予定。これは動作確認用の最小版なので、
-//    完成したらこのファイルを差し替えてOK（getLocation() が Coords を返す形だけ揃えてあれば動く）。
+/**
+ * ブラウザの Geolocation API をラップしたカスタムフック。
+ * Promise を返す getLocation 関数を提供する。
+ *
+ * ローディング・エラー管理は使う側に任せる方針。
+ * フック内で state を持たないことで、await による直線的な使い方が可能。
+ */
 export function useGeolocation() {
-  const getLocation = (): Promise<Coords> => {
+  /**
+   * 現在地を取得する。
+   * @returns Coordinates(緯度・経度)を resolve する Promise
+   * @throws ユーザーが拒否した場合や取得失敗時、Error を reject する
+   */
+  const getLocation = (): Promise<Coordinates> => {
     return new Promise((resolve, reject) => {
-      if (!('geolocation' in navigator)) {
-        reject(new Error('この端末では位置情報を取得できません'));
-        return;
-      }
       navigator.geolocation.getCurrentPosition(
-        (pos) => {
+        (position) => {
           resolve({
-            latitude: pos.coords.latitude,
-            longitude: pos.coords.longitude,
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
           });
         },
         (err) => {
-          reject(new Error('位置情報の取得に失敗しました: ' + err.message));
-        },
-        { enableHighAccuracy: true, timeout: 10000 }
+          reject(new Error(err.message));
+        }
       );
     });
   };
 
   return { getLocation };
 }
-=======
-import { useState } from 'react';
-import type { Coordinates } from '../types';
-
-type UseGeolocationRetuen = {
-    coords: Coordinates | null;
-    error: string | null;
-    loading: boolean;
-    getLocation: () => void;
-}
-
-export function useGeolocation(): UseGeolocationRetuen {
-    const [coords, setCoords] = useState<Coordinates | null>(null);
-    const [error, setError] = useState<string | null>(null);
-    const [loading, setLoading] = useState<boolean>(false);
-
-
-    /**
-     * navigator.geolocation.getCurrentPositionの構造
-     * ブラウザ標準のGeolocation APIで3つの引数を取る
-     * 1: successCallback -> 成功したときに呼ばれるコールバック
-     * 2: errorCallback   -> 失敗したときに呼ばれるコールバック
-     * 3: options         -> オプション(省略可)
-     * 引数として関数を渡している
-     */
-    const getLocation = () => {
-        setLoading(true);
-        setError(null);
-
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                setCoords({
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude,
-                });
-                setLoading(false);
-            },
-            (err) => {
-                setError(err.message),
-                setLoading(false);
-            }
-        );
-    };
-
-    return { coords, error, loading, getLocation };
-}
->>>>>>> 9b1440d8572f3a7b70979eb44d9fd1a33a53db61
