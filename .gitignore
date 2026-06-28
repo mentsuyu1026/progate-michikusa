@@ -33,4 +33,8 @@ output
 
 # LLM担当のローカル確認用CLI(リポジトリには含めない。内容はチーム外で別途共有)
 generate.mjs
+<<<<<<< HEAD
 .vercel
+=======
+.vercel
+>>>>>>> main

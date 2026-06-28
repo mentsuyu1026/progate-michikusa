@@ -1,45 +1,34 @@
-import { useState } from 'react';
+// src/hooks/useGeolocation.ts
 import type { Coordinates } from '../types';
 
-type UseGeolocationRetuen = {
-    coords: Coordinates | null;
-    error: string | null;
-    loading: boolean;
-    getLocation: () => void;
-}
+/**
+ * ブラウザの Geolocation API をラップしたカスタムフック。
+ * Promise を返す getLocation 関数を提供する。
+ *
+ * ローディング・エラー管理は使う側に任せる方針。
+ * フック内で state を持たないことで、await による直線的な使い方が可能。
+ */
+export function useGeolocation() {
+  /**
+   * 現在地を取得する。
+   * @returns Coordinates(緯度・経度)を resolve する Promise
+   * @throws ユーザーが拒否した場合や取得失敗時、Error を reject する
+   */
+  const getLocation = (): Promise<Coordinates> => {
+    return new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          resolve({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+        },
+        (err) => {
+          reject(new Error(err.message));
+        }
+      );
+    });
+  };
 
-export function useGeolocation(): UseGeolocationRetuen {
-    const [coords, setCoords] = useState<Coordinates | null>(null);
-    const [error, setError] = useState<string | null>(null);
-    const [loading, setLoading] = useState<boolean>(false);
-
-
-    /**
-     * navigator.geolocation.getCurrentPositionの構造
-     * ブラウザ標準のGeolocation APIで3つの引数を取る
-     * 1: successCallback -> 成功したときに呼ばれるコールバック
-     * 2: errorCallback   -> 失敗したときに呼ばれるコールバック
-     * 3: options         -> オプション(省略可)
-     * 引数として関数を渡している
-     */
-    const getLocation = () => {
-        setLoading(true);
-        setError(null);
-
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                setCoords({
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude,
-                });
-                setLoading(false);
-            },
-            (err) => {
-                setError(err.message),
-                setLoading(false);
-            }
-        );
-    };
-
-    return { coords, error, loading, getLocation };
+  return { getLocation };
 }

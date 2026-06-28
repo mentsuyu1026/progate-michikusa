@@ -1,20 +1,117 @@
+/* 画面全体のレイアウト */
 .container {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 24px;
+  padding: 32px 20px 64px;
+  flex-grow: 1;
+}
+
+/* 「現在地を取得」ボタン */
+.locate-button {
+  font-size: 18px;
+  font-weight: 500;
+  padding: 14px 32px;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--accent);
+  border: none;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.3s ease;
+}
+.locate-button:hover {
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+}
+.locate-button:active {
+  transform: translateY(0);
+}
+
+/* ローディング表示 */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 16px;
+  margin-top: 24px;
+  color: var(--text);
+}
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--accent-bg);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* エラー表示 */
+.error {
+  color: #d33;
+  background: rgba(221, 51, 51, 0.1);
+  padding: 12px 20px;
+  border-radius: 8px;
+}
+
+/* 結果カードのグリッド */
+.cards {
+  width: 100%;
+  max-width: 760px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  text-align: left;
 }
 
 .card {
-  background: aquamarine;
-  border-radius: 12px; /*角丸*/
-  padding: 16px; /*内側の余白*/
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /*影*/
-  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 22px;
+  box-shadow: var(--shadow);
+  transition: transform 0.15s ease;
+}
+.card:hover {
+  transform: translateY(-2px);
 }
 
-.button {
-  background-color: aquamarine;
-  border: none;
-  padding: 10px;
+/* 横幅いっぱいに広げるカード（地名・サマリー・詳しい紹介） */
+.card.wide,
+.card.area {
+  grid-column: 1 / -1;
+}
+
+.card-label {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.card-value {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text-h);
+  white-space: pre-wrap; /* APIの改行をそのまま表示 */
+}
+
+/* 地名は見出しっぽく大きく */
+.card.area .card-value {
+  font-size: 28px;
+  font-weight: 600;
+}
+
+/* スマホ：1カラムに */
+@media (max-width: 640px) {
+  .cards {
+    grid-template-columns: 1fr;
+  }
 }
