@@ -249,3 +249,71 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ヘッダーを横並びにして履歴ボタンを右寄せ */
+.app-header {
+  justify-content: space-between;
+}
+
+/* ヘッダーの履歴/戻るボタン */
+.header-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 7px 16px;
+  border-radius: 999px;
+  color: var(--text-h);
+  background: transparent;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.header-toggle:hover {
+  background: var(--accent-bg);
+  border-color: var(--accent);
+}
+
+/* 保存ボタン:結果表示の一番下 */
+.save-button {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 11px 28px;
+  margin-top: 8px;
+  border-radius: 999px;
+  color: var(--accent);
+  background: var(--bg);
+  border: 2px solid var(--accent);
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.3s ease,
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.save-button:hover:not(:disabled) {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+}
+
+.save-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.save-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-color: var(--border);
+  color: var(--text);
+}

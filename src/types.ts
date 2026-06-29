@@ -29,3 +29,20 @@ export type AreaDescription = {
   celebrity: string;
   description: string;
 };
+
+/**
+ * 訪問履歴の1件分を表す型。
+ * localStorage に保存して、後から一覧表示や再表示に使う。
+ *
+ * - id: 各レコードを識別するための一意なID(削除時の特定などに使用)
+ * - areaName 〜 description: /api/describe のレスポンスをそのまま保持
+ *   (再表示時に API を再度叩かずに済むよう、全フィールドを持つ)
+ * - coords: 地図表示や再訪検知のための座標
+ * - visitedAt: 訪問日時(ISO 8601 文字列)。並び替えや日付表示に使う
+ */
+export type VisitRecord = {
+    id: string;
+    area: AreaDescription;
+    coords: Coordinates;
+    visitedAt: string;
+};
