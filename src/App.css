@@ -1,18 +1,55 @@
-/* 画面全体のレイアウト */
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 24px;
-  padding: 32px 20px 64px;
-  flex-grow: 1;
+/* 全体レイアウト：読みやすい幅に中央寄せ */
+.app {
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 16px 20px 64px;
+  box-sizing: border-box;
+  text-align: left;
 }
 
-/* 「現在地を取得」ボタン */
-.locate-button {
-  font-size: 18px;
+/* ヘッダー */
+.app-header {
+  display: flex;
+  align-items: center;
+  padding: 8px 4px 20px;
+}
+.app-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-weight: 500;
-  padding: 14px 32px;
+  font-size: 17px;
+  color: var(--text-h);
+}
+.app-logo svg {
+  width: 20px;
+  height: 20px;
+  color: var(--accent);
+}
+
+/* トップ（取得前） */
+.hero {
+  text-align: center;
+  padding: 32px 0 16px;
+}
+.hero h1 {
+  margin: 0 0 8px;
+}
+.hero-sub {
+  color: var(--text);
+  margin: 0 0 28px;
+  font-size: 15px;
+}
+
+/* ボタン */
+.locate-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 17px;
+  font-weight: 500;
+  padding: 13px 28px;
   border-radius: 999px;
   color: #fff;
   background: var(--accent);
@@ -22,6 +59,10 @@
     transform 0.15s ease,
     box-shadow 0.3s ease;
 }
+.locate-button svg {
+  width: 18px;
+  height: 18px;
+}
 .locate-button:hover {
   box-shadow: var(--shadow);
   transform: translateY(-1px);
@@ -29,19 +70,29 @@
 .locate-button:active {
   transform: translateY(0);
 }
+.locate-button.slim {
+  font-size: 14px;
+  padding: 9px 18px;
+  color: var(--accent);
+  background: var(--accent-bg);
+  margin: 12px 0 4px;
+}
+.locate-button.slim:hover {
+  box-shadow: none;
+}
 
-/* ローディング表示 */
+/* ローディング */
 .loading {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  margin-top: 24px;
+  padding: 64px 0;
   color: var(--text);
 }
 .spinner {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border: 4px solid var(--accent-bg);
   border-top-color: var(--accent);
   border-radius: 50%;
@@ -53,65 +104,148 @@
   }
 }
 
-/* エラー表示 */
+/* エラー */
 .error {
+  text-align: center;
+  padding: 32px 0;
+}
+.error p {
   color: #d33;
   background: rgba(221, 51, 51, 0.1);
   padding: 12px 20px;
   border-radius: 8px;
+  display: inline-block;
+  margin: 0 0 16px;
+}
+.retry-button {
+  display: block;
+  margin: 0 auto;
+  font-size: 14px;
+  padding: 9px 20px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-h);
+  cursor: pointer;
 }
 
-/* 結果カードのグリッド */
-.cards {
-  width: 100%;
-  max-width: 760px;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  text-align: left;
+/* 結果エリア */
+.result {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
+/* マップ枠（プレースホルダー → 後で Leaflet） */
+.map-frame {
+  position: relative;
+  height: 170px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: linear-gradient(0deg, rgba(133, 183, 235, 0.25), rgba(93, 202, 165, 0.25));
+}
+.map-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.map-placeholder svg {
+  width: 40px;
+  height: 40px;
+  color: var(--accent);
+}
+.map-chip {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-h);
+}
+.map-chip svg {
+  width: 15px;
+  height: 15px;
+  color: var(--accent);
+}
+
+/* カード共通 */
 .card {
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 20px 22px;
-  box-shadow: var(--shadow);
-  transition: transform 0.15s ease;
+  padding: 18px 20px;
 }
-.card:hover {
-  transform: translateY(-2px);
-}
-
-/* 横幅いっぱいに広げるカード（地名・サマリー・詳しい紹介） */
-.card.wide,
-.card.area {
-  grid-column: 1 / -1;
-}
-
 .card-label {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.04em;
   color: var(--accent);
-  margin-bottom: 8px;
+  margin: 0 0 6px;
 }
 .card-value {
-  font-size: 16px;
-  line-height: 1.6;
+  font-size: 15px;
+  line-height: 1.65;
   color: var(--text-h);
-  white-space: pre-wrap; /* APIの改行をそのまま表示 */
+  margin: 0;
+  white-space: pre-wrap;
 }
 
-/* 地名は見出しっぽく大きく */
-.card.area .card-value {
-  font-size: 28px;
-  font-weight: 600;
+/* エリア名カード */
+.hero-card .area-name {
+  margin: 0 0 10px;
+  font-size: 26px;
 }
 
-/* スマホ：1カラムに */
-@media (max-width: 640px) {
-  .cards {
+/* カテゴリカードのグリッド */
+.cards-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* サムネ（アイコン代替） */
+.thumb {
+  height: 72px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+.thumb svg {
+  width: 28px;
+  height: 28px;
+}
+.thumb-coral {
+  background: rgba(216, 90, 48, 0.12);
+  color: #c14c25;
+}
+.thumb-amber {
+  background: rgba(186, 117, 23, 0.14);
+  color: #a8690f;
+}
+.thumb-pink {
+  background: rgba(212, 83, 126, 0.12);
+  color: #c24372;
+}
+.thumb-teal {
+  background: rgba(29, 158, 117, 0.14);
+  color: #168763;
+}
+
+/* スマホ：カテゴリも1カラム */
+@media (max-width: 560px) {
+  .cards-grid {
     grid-template-columns: 1fr;
   }
 }
