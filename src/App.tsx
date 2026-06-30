@@ -4,6 +4,7 @@ import { useDescribe } from "./hooks/useDescribe";
 import { useVisitHistory } from "./hooks/useVisitHistory";
 import HistoryPage from "./components/HistoryPage";
 import type { AreaDescription, Coordinates } from "./types";
+import MapView from "./components/MapView";
 import "./App.css";
 
 // 依存を増やさないためのインラインSVGアイコン。後で写真に差し替え予定。
@@ -168,7 +169,7 @@ function App() {
           {data && (
             <div className="result">
               {/* 現在地マップ枠（次ステップで Leaflet に置き換え） */}
-              <div className="map-frame" role="img" aria-label="現在地周辺のマップ">
+              {/* <div className="map-frame" role="img" aria-label="現在地周辺のマップ">
                 <div className="map-placeholder">
                   <Icon name="pin" />
                 </div>
@@ -176,7 +177,16 @@ function App() {
                   <Icon name="location" />
                   {data.areaName}
                 </span>
-              </div>
+              </div> */}
+              {coords && (
+                <div className="map-frame" role="img" aria-label="現在地周辺のマップ">
+                  <MapView center={coords} />
+                  <span className="map-chip">
+                    <Icon name="location" />
+                    {data.areaName}
+                  </span>
+                </div>
+              )}
 
               {!loading && (
                 <button className="locate-button slim" onClick={handleClick}>
