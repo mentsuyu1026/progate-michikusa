@@ -8,6 +8,7 @@
 import { useState } from 'react';
 import type { VisitRecord } from '../types';
 import HistoryDetailModal from "./HistoryDetailModal";
+import HistoryMap from "./HistoryMap";
 import "./HistoryPage.css";
 
 type HistoryPageProps = {
@@ -32,6 +33,10 @@ function HistoryPage({ records, onRemove }: HistoryPageProps) {
                 </p>
             ) : (
                 <div className="history-grid">
+                    <HistoryMap
+                        records={records}
+                        onMarkerClick={(record) => setSelectedRecord(record)}
+                    />
                     {sortedRecords.map((record) => (
                         <article
                             key={record.id}
