@@ -1,7 +1,11 @@
 import { useState, type ReactElement } from "react";
 import { useGeolocation } from "./hooks/useGeolocation";
 import { useDescribe } from "./hooks/useDescribe";
-import type { AreaDescription } from "./types";
+import { useImageSearch, type AreaImageUrls } from "./hooks/useImageSearch";
+import { useVisitHistory } from "./hooks/useVisitHistory";
+import HistoryPage from "./components/HistoryPage";
+import type { AreaDescription, Coordinates } from "./types";
+import MapView from "./components/MapView";
 import "./App.css";
 
 // 依存を増やさないためのインラインSVGアイコン。後で写真に差し替え予定。
@@ -71,20 +75,31 @@ const loadingMessages = [
 function App() {
   const { getLocation } = useGeolocation();
   const { fetchDescribe } = useDescribe();
+  const { fetchAreaImages } = useImageSearch();
+  const { records, addRecord, removeRecord } = useVisitHistory();
 
   const [data, setData] = useState<AreaDescription | null>(null);
+  const [imageUrls, setImageUrls] = useState<AreaImageUrls | null>(null);
+  const [coords, setCoords] = useState<Coordinates | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [speaking, setSpeaking] = useState(false);
+  const [mode, setMode] = useState<"current" | "history">("current");
 
   const handleClick = async () => {
     stopSpeak();
     setLoading(true);
     setError(null);
+    setImageUrls(null); // 前回の画像をクリア
     try {
       const coords = await getLocation();
+      setCoords(coords);
       const result = await fetchDescribe(coords);
       setData(result);
+      // 画像はテキスト表示の妨げにならないよう、後追いで読み込む(失敗時はアイコン表示のまま)
+      fetchAreaImages(result.images)
+        .then(setImageUrls)
+        .catch(() => setImageUrls(null));
     } catch (e) {
       setError(e instanceof Error ? e.message : "不明なエラー");
     } finally {
@@ -101,9 +116,21 @@ function App() {
     speechSynthesis.speak(u);
     setSpeaking(true);
   };
+
   const stopSpeak = () => {
     speechSynthesis.cancel();
     setSpeaking(false);
+  };
+
+  // 現在の場所が履歴に保存済みかチェック
+  const isSaved = data
+    ? records.some((r) => r.area.areaName === data.areaName)
+    : false;
+
+  const handleSave = () => {
+    if (data && coords && !isSaved) {
+      addRecord(data, coords);
+    }
   };
 
   return (
@@ -113,121 +140,177 @@ function App() {
           <Icon name="pin" />
           みちくさ
         </span>
+        <button
+          className="header-toggle"
+          onClick={() =>
+            setMode((prev) => (prev === "current" ? "history" : "current"))
+          }
+        >
+          {mode === "current" ? "履歴" : "戻る"}
+        </button>
       </header>
 
-      {!loading && !data && (
-        <div className="hero">
-          <h1>現在地を調べる</h1>
-          <p className="hero-sub">ボタンひとつで、今いる街をAIがご案内します。</p>
+      {mode === "history" ? (
+        <HistoryPage records={records} onRemove={removeRecord} />
+      ) : (
+        <>
+          {!loading && !data && (
+            <div className="hero">
+              <h1>現在地を調べる</h1>
+              <p className="hero-sub">ボタンひとつで、今いる街をAIがご案内します。</p>
 
-          <ol className="howto">
-            <li>
-              <span className="howto-num">1</span>
-              ボタンを押して位置情報を許可
-            </li>
-            <li>
-              <span className="howto-num">2</span>
-              AIが今いる街をやさしく解説
-            </li>
-            <li>
-              <span className="howto-num">3</span>
-              音声ガイドで聞いたり、深掘り
-            </li>
-          </ol>
+              <ol className="howto">
+                <li>
+                  <span className="howto-num">1</span>
+                  ボタンを押して位置情報を許可
+                </li>
+                <li>
+                  <span className="howto-num">2</span>
+                  AIが今いる街をやさしく解説
+                </li>
+                <li>
+                  <span className="howto-num">3</span>
+                  音声ガイドで聞いたり、深掘り
+                </li>
+              </ol>
 
-          <button className="locate-button" onClick={handleClick}>
-            <Icon name="location" />
-            現在地を取得
-          </button>
-        </div>
-      )}
-
-      {loading && (
-        <div className="loading">
-          {/* 和傘（かざぐるま）が回る遊びのあるローディング */}
-          <div className="wagasa" aria-hidden="true">
-            <div className="wagasa-disk" />
-          </div>
-          <div className="steps" aria-hidden="true">
-            <span />
-            <span />
-            <span />
-            <span />
-          </div>
-          <div className="loading-msgs" aria-live="polite">
-            <ul>
-              {loadingMessages.map((m) => (
-                <li key={m}>{m}</li>
-              ))}
-              {/* 先頭をもう一度並べてループを滑らかにする */}
-              <li aria-hidden="true">{loadingMessages[0]}</li>
-            </ul>
-          </div>
-        </div>
-      )}
-
-      {error && (
-        <div className="error">
-          <p>エラー: {error}</p>
-          <button className="retry-button" onClick={handleClick}>
-            もう一度試す
-          </button>
-        </div>
-      )}
-
-      {data && (
-        <div className="result">
-          {/* 現在地マップ枠（次ステップで Leaflet に置き換え） */}
-          <div className="map-frame" role="img" aria-label="現在地周辺のマップ">
-            <div className="map-placeholder">
-              <Icon name="pin" />
+              <button className="locate-button" onClick={handleClick}>
+                <Icon name="location" />
+                現在地を取得
+              </button>
             </div>
-            <span className="map-chip">
-              <Icon name="location" />
-              {data.areaName}
-            </span>
-          </div>
-
-          {!loading && (
-            <button className="locate-button slim" onClick={handleClick}>
-              <Icon name="location" />
-              別の場所を調べる
-            </button>
           )}
-          <button
-            className="locate-button slim"
-            aria-pressed={speaking}
-            onClick={() => (speaking ? stopSpeak() : speak())}
-          >
-            {speaking ? "停止" : "音声ガイド"}
-          </button>
 
-          {/* エリア名 + サマリー */}
-          <article className="card hero-card">
-            <p className="card-label">地名</p>
-            <h2 className="area-name">{data.areaName}</h2>
-            <p className="card-value">{data.summary}</p>
-          </article>
+          {loading && (
+            <div className="loading">
+              {/* 和傘（かざぐるま）が回る遊びのあるローディング */}
+              <div className="wagasa" aria-hidden="true">
+                <div className="wagasa-disk" />
+              </div>
+              <div className="steps" aria-hidden="true">
+                <span />
+                <span />
+                <span />
+                <span />
+              </div>
+              <div className="loading-msgs" aria-live="polite">
+                <ul>
+                  {loadingMessages.map((m) => (
+                    <li key={m}>{m}</li>
+                  ))}
+                  {/* 先頭をもう一度並べてループを滑らかにする */}
+                  <li aria-hidden="true">{loadingMessages[0]}</li>
+                </ul>
+              </div>
+            </div>
+          )}
 
-          {/* カテゴリカード（サムネ付き） */}
-          <div className="cards-grid">
-            {categories.map((c) => (
-              <article key={c.key} className="card">
-                <div className={`thumb thumb-${c.theme}`}>
-                  <Icon name={c.icon} />
+          {loading && (
+            <div className="loading">
+              <div className="spinner" />
+              <p>現在地から、この街のことを調べています…</p>
+            </div>
+          )}
+
+          {error && (
+            <div className="error">
+              <p>エラー: {error}</p>
+              <button className="retry-button" onClick={handleClick}>
+                もう一度試す
+              </button>
+            </div>
+          )}
+
+          {data && (
+            <div className="result">
+              {/* 現在地マップ枠（次ステップで Leaflet に置き換え） */}
+              {/* <div className="map-frame" role="img" aria-label="現在地周辺のマップ">
+                <div className="map-placeholder">
+                  <Icon name="pin" />
                 </div>
-                <p className="card-label">{c.label}</p>
-                <p className="card-value">{data[c.key]}</p>
-              </article>
-            ))}
-          </div>
+                <span className="map-chip">
+                  <Icon name="location" />
+                  {data.areaName}
+                </span>
+              </div> */}
+              {coords && (
+                <div className="map-frame" role="img" aria-label="現在地周辺のマップ">
+                  <MapView center={coords} />
+                  <span className="map-chip">
+                    <Icon name="location" />
+                    {data.areaName}
+                  </span>
+                </div>
+              )}
 
-          {/* 詳しい紹介 */}
-          <article className="card">
-            <p className="card-label">詳しい紹介</p>
-            <p className="card-value">{data.description}</p>
-          </article>
-        </div>
+              {!loading && (
+                <button className="locate-button slim" onClick={handleClick}>
+                  <Icon name="location" />
+                  別の場所を調べる
+                </button>
+              )}
+              <button
+                className="locate-button slim"
+                aria-pressed={speaking}
+                onClick={() => (speaking ? stopSpeak() : speak())}
+              >
+                {speaking ? "停止" : "音声ガイド"}
+              </button>
+
+              {/* エリア名 + サマリー */}
+              <article className="card hero-card">
+                {imageUrls?.summary && (
+                  <img
+                    className="hero-photo"
+                    src={imageUrls.summary}
+                    alt={data.areaName}
+                    loading="lazy"
+                  />
+                )}
+                <p className="card-label">地名</p>
+                <h2 className="area-name">{data.areaName}</h2>
+                <p className="card-value">{data.summary}</p>
+              </article>
+
+              {/* カテゴリカード（サムネ付き：画像が取れたら写真、なければアイコン） */}
+              <div className="cards-grid">
+                {categories.map((c) => (
+                  <article key={c.key} className="card">
+                    {imageUrls?.[c.key] ? (
+                      <img
+                        className="thumb thumb-photo"
+                        src={imageUrls[c.key] as string}
+                        alt={c.label}
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className={`thumb thumb-${c.theme}`}>
+                        <Icon name={c.icon} />
+                      </div>
+                    )}
+                    <p className="card-label">{c.label}</p>
+                    <p className="card-value">{data[c.key]}</p>
+                  </article>
+                ))}
+              </div>
+
+              {/* 詳しい紹介 */}
+              <article className="card">
+                <p className="card-label">詳しい紹介</p>
+                <p className="card-value">{data.description}</p>
+              </article>
+
+              {/* 保存ボタン:結果表示の一番下 */}
+              <button
+                className="save-button"
+                onClick={handleSave}
+                disabled={isSaved}
+              >
+                {isSaved ? "保存済み" : "この場所を保存"}
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

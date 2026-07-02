@@ -1,0 +1,144 @@
+/* オーバーレイ(画面全体を覆う半透明の背景) */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 9999;
+    animation: fade-in 0.2s ease;
+}
+
+/* モーダル本体 */
+.modal-content {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    max-height: 85vh;
+    background: var(--bg);
+    border-radius: 16px;
+    padding: 28px 24px 24px;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+    animation: slide-up 0.25s ease;
+    z-index: 10000;
+}
+
+/* 閉じるボタン */
+.modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    line-height: 1;
+    color: var(--text);
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.modal-close:hover {
+    background: var(--accent-bg);
+    color: var(--text-h);
+}
+
+/* 訪問日 */
+.modal-date {
+    margin: 0 0 4px;
+    font-size: 12px;
+    color: var(--text);
+}
+
+/* 地域名 */
+.modal-area-name {
+    margin: 0 0 12px;
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-h);
+}
+
+/* サマリー */
+.modal-summary {
+    margin: 0 0 20px;
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--text-h);
+}
+
+/* カテゴリカード群のグリッド */
+.modal-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+/* モーダル内のカード */
+.modal-card {
+    background: var(--accent-bg);
+    border-radius: 10px;
+    padding: 14px 16px;
+}
+
+.modal-card-label {
+    margin: 0 0 4px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+}
+
+.modal-card-value {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-h);
+    white-space: pre-wrap;
+}
+
+/* アニメーション */
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slide-up {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* スマホ:カードを1カラムに */
+@media (max-width: 560px) {
+    .modal-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-content {
+        padding: 24px 20px 20px;
+    }
+
+    .modal-area-name {
+        font-size: 22px;
+    }
+}
