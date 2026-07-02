@@ -1,15 +1,24 @@
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
+  /* 明るい和モダン：生成り＋縹(はなだ)・珊瑚朱・山吹・若竹 */
+  --text: #6f6a62;
+  --text-h: #2c2a26; /* 墨 */
+  --bg: #fffdf7; /* 明るい生成り */
+  --border: #efe7d6;
+  --code-bg: #f4efe2;
+  --accent: #2d8cd0; /* 縹色（明るい藍） */
+  --accent-bg: rgba(45, 140, 208, 0.12);
+  --accent-border: rgba(45, 140, 208, 0.45);
+  --vermilion: #f4623a; /* 珊瑚朱（メインボタン） */
+  --vermilion-dark: #dc4e2b;
+  --gold: #f4b740; /* 山吹 */
+  --wave: rgba(45, 140, 208, 0.28); /* 青海波の波の色 */
+  --ichimatsu: rgba(45, 140, 208, 0.85); /* 市松の色 */
+  --wagasa-1: #f4623a; /* 和傘の色1（朱） */
+  --wagasa-2: #ffe7cf; /* 和傘の色2（淡橙） */
   --social-bg: rgba(244, 243, 236, 0.5);
   --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+    rgba(60, 40, 20, 0.12) 0 10px 15px -3px,
+    rgba(60, 40, 20, 0.06) 0 4px 6px -2px;
 
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
   --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
@@ -32,14 +41,22 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
+    /* 和の夜：藍鉄を背景に、差し色は明るく */
+    --text: #b3ab9c;
+    --text-h: #f4efe4;
+    --bg: #191d26; /* 藍鉄 */
+    --border: #2f333d;
+    --code-bg: #20242e;
+    --accent: #6cb8e6; /* 明るい縹 */
+    --accent-bg: rgba(108, 184, 230, 0.18);
+    --accent-border: rgba(108, 184, 230, 0.5);
+    --vermilion: #ff7a54; /* 明るい珊瑚朱 */
+    --vermilion-dark: #ee6640;
+    --gold: #ffcf6b;
+    --wave: rgba(108, 184, 230, 0.22);
+    --ichimatsu: rgba(108, 184, 230, 0.8);
+    --wagasa-1: #ff7a54;
+    --wagasa-2: #2a2f3a;
     --social-bg: rgba(47, 48, 58, 0.5);
     --shadow:
       rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;

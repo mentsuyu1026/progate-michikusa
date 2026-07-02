@@ -55,11 +55,18 @@ function Icon({ name }: { name: IconName }) {
 
 // カテゴリカードの設定（フィールド名・ラベル・アイコン・色テーマ）
 const categories = [
-  { key: "history", label: "簡単な歴史", icon: "history", theme: "coral" },
-  { key: "food", label: "ご当地グルメ", icon: "food", theme: "amber" },
-  { key: "souvenir", label: "おすすめのお土産", icon: "gift", theme: "pink" },
-  { key: "celebrity", label: "出身有名人", icon: "star", theme: "teal" },
+  { key: "history", label: "簡単な歴史", icon: "history", theme: "ai" },
+  { key: "food", label: "ご当地グルメ", icon: "food", theme: "shu" },
+  { key: "souvenir", label: "おすすめのお土産", icon: "gift", theme: "yamabuki" },
+  { key: "celebrity", label: "出身有名人", icon: "star", theme: "matcha" },
 ] as const;
+
+// ローディング中に順番に表示する一言（遊び）
+const loadingMessages = [
+  "いまいる街を探しています…",
+  "歴史をひもといています…",
+  "おすすめの寄り道を探しています…",
+];
 
 function App() {
   const { getLocation } = useGeolocation();
@@ -89,7 +96,7 @@ function App() {
     const u = new SpeechSynthesisUtterance(`${data.areaName}。${data.summary}`);
     u.lang = "ja-JP";
     u.onend = () => setSpeaking(false);
-    u.rate = 2;
+    u.rate = 1.05;
     speechSynthesis.cancel();
     speechSynthesis.speak(u);
     setSpeaking(true);
@@ -111,7 +118,23 @@ function App() {
       {!loading && !data && (
         <div className="hero">
           <h1>現在地を調べる</h1>
-          <p className="hero-sub">ボタンを押すと、今いる街をAIが解説します。</p>
+          <p className="hero-sub">ボタンひとつで、今いる街をAIがご案内します。</p>
+
+          <ol className="howto">
+            <li>
+              <span className="howto-num">1</span>
+              ボタンを押して位置情報を許可
+            </li>
+            <li>
+              <span className="howto-num">2</span>
+              AIが今いる街をやさしく解説
+            </li>
+            <li>
+              <span className="howto-num">3</span>
+              音声ガイドで聞いたり、深掘り
+            </li>
+          </ol>
+
           <button className="locate-button" onClick={handleClick}>
             <Icon name="location" />
             現在地を取得
@@ -121,8 +144,25 @@ function App() {
 
       {loading && (
         <div className="loading">
-          <div className="spinner" />
-          <p>現在地から、この街のことを調べています…</p>
+          {/* 和傘（かざぐるま）が回る遊びのあるローディング */}
+          <div className="wagasa" aria-hidden="true">
+            <div className="wagasa-disk" />
+          </div>
+          <div className="steps" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+            <span />
+          </div>
+          <div className="loading-msgs" aria-live="polite">
+            <ul>
+              {loadingMessages.map((m) => (
+                <li key={m}>{m}</li>
+              ))}
+              {/* 先頭をもう一度並べてループを滑らかにする */}
+              <li aria-hidden="true">{loadingMessages[0]}</li>
+            </ul>
+          </div>
         </div>
       )}
 
