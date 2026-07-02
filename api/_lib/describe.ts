@@ -4,6 +4,19 @@
 //
 // 依存ゼロ・Node18+ の標準 fetch のみで動く。APIキーは呼び出し側から渡す(env管理は呼び出し側の責務)。
 
+/**
+ * 各項目に対応する画像検索キーワード。
+ * フロントがこの語で実写(Wikimedia等)を検索して各カードに表示する。
+ * 具体的な固有名詞を含む(例: 「浅草 雷門」)ことでヒット率を上げる狙い。
+ */
+export type AreaImageQueries = {
+  summary: string;
+  history: string;
+  food: string;
+  souvenir: string;
+  celebrity: string;
+};
+
 /** 生成された解説の構造化結果。STEP2フォーマット + フロント互換フィールド。 */
 export type AreaDescription = {
   areaName: string;
@@ -13,6 +26,8 @@ export type AreaDescription = {
   souvenir: string;
   celebrity: string;
   description: string;
+  /** 各項目の画像検索キーワード(実写取得用) */
+  images: AreaImageQueries;
 };
 
 type GenerateOptions = {
@@ -31,6 +46,7 @@ type GeminiPayload = {
   food: string;
   souvenir: string;
   celebrity: string;
+  images: AreaImageQueries;
 };
 
 // 使用する Gemini モデル(無料枠・高速)。必要なら GEMINI_MODEL env で上書き可。
@@ -46,8 +62,21 @@ const RESPONSE_SCHEMA = {
     food: { type: "string", description: "名産・グルメ(駅弁・名物料理など)" },
     souvenir: { type: "string", description: "おすすめのおみやげ・土産品" },
     celebrity: { type: "string", description: "その地域出身・ゆかりの有名人と、地域との繋がり" },
+    // 各項目に合う実写を探すための画像検索キーワード。固有名詞を含めてヒット率を上げる。
+    images: {
+      type: "object",
+      description: "各項目に対応する画像検索キーワード(日本語1〜4語、固有名詞を含める)",
+      properties: {
+        summary: { type: "string", description: "その地域を象徴する代表的な風景・ランドマークの検索語(例: 浅草 雷門)" },
+        history: { type: "string", description: "歴史を象徴する史跡・建造物の検索語" },
+        food: { type: "string", description: "名産・グルメの料理名を含む検索語(例: 浅草 もんじゃ焼き)" },
+        souvenir: { type: "string", description: "おみやげの品名を含む検索語(例: 雷おこし)" },
+        celebrity: { type: "string", description: "ゆかりの有名人の氏名(例: 葛飾北斎)" },
+      },
+      required: ["summary", "history", "food", "souvenir", "celebrity"],
+    },
   },
-  required: ["summary", "history", "food", "souvenir", "celebrity"],
+  required: ["summary", "history", "food", "souvenir", "celebrity", "images"],
 };
 
 /**
@@ -64,6 +93,13 @@ export function buildPrompt(areaName: string): string {
     `- 各項目は2〜3文程度におさめる。`,
     `- 確証のない事実や数字は断定せず、わかる範囲で無理のない説明にする。`,
     `- 地名が曖昧で特定できない場合は、その地域一帯の一般的な特色を述べる。`,
+    `- さらに images として、各項目に合う実写を画像検索で見つけるためのキーワードを付ける。`,
+    `  ・できるだけ「固有名詞そのもの」を1語で指定する(建造物名・料理名・商品名・人物名)。`,
+    `    例: 歴史→「所沢航空発祥記念館」、グルメ→「狭山茶」、土産→「雷おこし」、有名人→「宮崎駿」。`,
+    `  ・各項目で必ず別々の被写体を選ぶ(4枚が同じ建物・同じ写真にならないようにする)。`,
+    `  ・「所沢 歴史」「所沢 グルメ」のような『地名+カテゴリ語』は避ける。`,
+    `    (その市の代表記事に集中して全部同じ写真になりやすいため)`,
+    `  ・有名な対象が思いつかない項目は、無理に地名を足さず、その分野で最も知られた固有名詞にする。`,
   ].join("\n");
 }
 
@@ -135,6 +171,16 @@ export async function generateAreaDescription(
     .filter(Boolean)
     .join("\n\n");
 
+  // 画像クエリが欠けても落ちないようフォールバック(地域名+項目名で最低限の検索語にする)。
+  const img = parsed.images ?? ({} as Partial<AreaImageQueries>);
+  const images: AreaImageQueries = {
+    summary: img.summary || name,
+    history: img.history || `${name} 歴史 史跡`,
+    food: img.food || `${name} 名物 料理`,
+    souvenir: img.souvenir || `${name} お土産`,
+    celebrity: img.celebrity || `${name} 出身 有名人`,
+  };
+
   return {
     areaName: name,
     summary: parsed.summary ?? "",
@@ -143,5 +189,6 @@ export async function generateAreaDescription(
     souvenir: parsed.souvenir ?? "",
     celebrity: parsed.celebrity ?? "",
     description,
+    images,
   };
 }
