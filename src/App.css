@@ -8,24 +8,55 @@
   text-align: left;
 }
 
-/* ヘッダー */
+/* ヘッダー（青海波の文様＋下に市松リボン） */
 .app-header {
+  position: relative;
   display: flex;
   align-items: center;
-  padding: 8px 4px 20px;
+  padding: 20px 18px;
+  margin-bottom: 20px;
+  border-radius: 14px;
+  overflow: hidden;
+  /* 青海波（せいがいは）：波が重なる伝統文様 */
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(circle at 100% 150%, var(--bg) 24%, var(--wave) 25%, var(--wave) 28%, var(--bg) 29%, var(--bg) 36%, var(--wave) 37%, var(--wave) 40%, transparent 41%),
+    radial-gradient(circle at 0 150%, var(--bg) 24%, var(--wave) 25%, var(--wave) 28%, var(--bg) 29%, var(--bg) 36%, var(--wave) 37%, var(--wave) 40%, transparent 41%),
+    radial-gradient(circle at 50% 100%, var(--bg) 10%, var(--wave) 11%, var(--wave) 23%, var(--bg) 24%, var(--bg) 30%, var(--wave) 31%, var(--wave) 43%, var(--bg) 44%, var(--bg) 50%, var(--wave) 51%, var(--wave) 63%, var(--bg) 64%, var(--bg) 71%, transparent 71%),
+    radial-gradient(circle at 100% 50%, var(--bg) 5%, var(--wave) 6%, var(--wave) 15%, var(--bg) 16%, var(--bg) 20%, var(--wave) 21%, var(--wave) 30%, var(--bg) 31%, var(--bg) 35%, var(--wave) 36%, var(--wave) 45%, var(--bg) 46%, var(--bg) 50%, transparent 50%),
+    radial-gradient(circle at 0 50%, var(--bg) 5%, var(--wave) 6%, var(--wave) 15%, var(--bg) 16%, var(--bg) 20%, var(--wave) 21%, var(--wave) 30%, var(--bg) 31%, var(--bg) 35%, var(--wave) 36%, var(--wave) 45%, var(--bg) 46%, var(--bg) 50%, transparent 50%);
+  background-size: 40px 40px;
+  border: 1px solid var(--border);
+}
+/* 市松（いちまつ）のリボン */
+.app-header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 8px;
+  background: repeating-conic-gradient(
+      var(--ichimatsu) 0 25%,
+      transparent 0 50%
+    )
+    0 0 / 16px 16px;
 }
 .app-logo {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-weight: 500;
-  font-size: 17px;
+  font-weight: 600;
+  font-size: 18px;
   color: var(--text-h);
+  background: var(--bg);
+  padding: 4px 12px 4px 8px;
+  border-radius: 999px;
 }
 .app-logo svg {
   width: 20px;
   height: 20px;
-  color: var(--accent);
+  color: var(--vermilion);
 }
 
 /* トップ（取得前） */
@@ -38,11 +69,45 @@
 }
 .hero-sub {
   color: var(--text);
-  margin: 0 0 28px;
+  margin: 0 0 24px;
   font-size: 15px;
 }
 
-/* ボタン */
+/* 使い方ガイド（3ステップ） */
+.howto {
+  list-style: none;
+  margin: 0 auto 28px;
+  padding: 16px 20px;
+  max-width: 360px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--accent-bg);
+  border-radius: 14px;
+}
+.howto li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: var(--text-h);
+}
+.howto-num {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ボタン（メイン＝朱） */
 .locate-button {
   display: inline-flex;
   align-items: center;
@@ -52,12 +117,13 @@
   padding: 13px 28px;
   border-radius: 999px;
   color: #fff;
-  background: var(--accent);
+  background: var(--vermilion);
   border: none;
   cursor: pointer;
   transition:
     transform 0.15s ease,
-    box-shadow 0.3s ease;
+    box-shadow 0.3s ease,
+    background 0.2s ease;
 }
 .locate-button svg {
   width: 18px;
@@ -66,41 +132,134 @@
 .locate-button:hover {
   box-shadow: var(--shadow);
   transform: translateY(-1px);
+  background: var(--vermilion-dark);
 }
 .locate-button:active {
   transform: translateY(0);
 }
+/* サブボタン（＝藍の淡色） */
 .locate-button.slim {
   font-size: 14px;
   padding: 9px 18px;
   color: var(--accent);
   background: var(--accent-bg);
-  margin: 12px 0 4px;
+  margin: 4px 0;
 }
 .locate-button.slim:hover {
   box-shadow: none;
+  background: var(--accent-bg);
 }
 
-/* ローディング */
+/* ===== ローディング（遊びのある和風演出） ===== */
 .loading {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-  padding: 64px 0;
-  color: var(--text);
+  gap: 18px;
+  padding: 56px 0;
 }
-.spinner {
-  width: 42px;
-  height: 42px;
-  border: 4px solid var(--accent-bg);
-  border-top-color: var(--accent);
+
+/* 和傘（かざぐるま）：交互色の扇形が回る */
+.wagasa {
+  width: 96px;
+  height: 96px;
+}
+.wagasa-disk {
+  width: 96px;
+  height: 96px;
   border-radius: 50%;
-  animation: spin 0.9s linear infinite;
+  background: repeating-conic-gradient(
+    var(--wagasa-1) 0 45deg,
+    var(--wagasa-2) 45deg 90deg
+  );
+  box-shadow: var(--shadow);
+  position: relative;
+  animation: spin 3.2s linear infinite;
+}
+.wagasa-disk::after {
+  content: "";
+  position: absolute;
+  inset: 39%;
+  border-radius: 50%;
+  background: var(--gold);
 }
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+/* てくてく足あと */
+.steps {
+  display: flex;
+  gap: 10px;
+}
+.steps span {
+  width: 9px;
+  height: 13px;
+  border-radius: 50% 50% 45% 45%;
+  background: var(--accent);
+  opacity: 0.18;
+  animation: step 1.6s infinite;
+}
+.steps span:nth-child(1) {
+  transform: translateY(-3px);
+}
+.steps span:nth-child(2) {
+  transform: translateY(3px);
+  animation-delay: 0.2s;
+}
+.steps span:nth-child(3) {
+  transform: translateY(-3px);
+  animation-delay: 0.4s;
+}
+.steps span:nth-child(4) {
+  transform: translateY(3px);
+  animation-delay: 0.6s;
+}
+@keyframes step {
+  0%,
+  100% {
+    opacity: 0.18;
+  }
+  35% {
+    opacity: 0.85;
+  }
+}
+
+/* 一言メッセージが順に切り替わる（CSSだけでループ） */
+.loading-msgs {
+  height: 1.7em;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 15px;
+}
+.loading-msgs ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  animation: msgcycle 7.5s infinite;
+}
+.loading-msgs li {
+  height: 1.7em;
+  line-height: 1.7em;
+  text-align: center;
+}
+@keyframes msgcycle {
+  0%,
+  26% {
+    transform: translateY(0);
+  }
+  33%,
+  59% {
+    transform: translateY(-1.7em);
+  }
+  66%,
+  92% {
+    transform: translateY(-3.4em);
+  }
+  100% {
+    transform: translateY(-5.1em);
   }
 }
 
@@ -110,8 +269,8 @@
   padding: 32px 0;
 }
 .error p {
-  color: #d33;
-  background: rgba(221, 51, 51, 0.1);
+  color: var(--vermilion-dark);
+  background: rgba(215, 72, 79, 0.1);
   padding: 12px 20px;
   border-radius: 8px;
   display: inline-block;
@@ -143,7 +302,23 @@
   border-radius: 14px;
   overflow: hidden;
   border: 1px solid var(--border);
-  /* background のグラデーション削除 */
+  background: linear-gradient(
+    135deg,
+    rgba(36, 72, 95, 0.14),
+    rgba(122, 139, 79, 0.14)
+  );
+}
+.map-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.map-placeholder svg {
+  width: 40px;
+  height: 40px;
+  color: var(--vermilion);
 }
 .map-chip {
   position: absolute;
@@ -163,7 +338,7 @@
 .map-chip svg {
   width: 15px;
   height: 15px;
-  color: var(--accent);
+  color: var(--vermilion);
 }
 
 /* カード共通 */
@@ -201,7 +376,7 @@
   gap: 12px;
 }
 
-/* サムネ（アイコン代替） */
+/* サムネ（和カラー・アイコン代替） */
 .thumb {
   height: 110px;
   border-radius: 8px;
@@ -220,21 +395,21 @@
   width: 100%;
   height: 100%;
 }
-.thumb-coral {
-  background: rgba(216, 90, 48, 0.12);
-  color: #c14c25;
+.thumb-ai {
+  background: rgba(45, 140, 208, 0.13); /* 縹 */
+  color: #2277b8;
 }
-.thumb-amber {
-  background: rgba(186, 117, 23, 0.14);
-  color: #a8690f;
+.thumb-shu {
+  background: rgba(244, 98, 58, 0.14); /* 珊瑚朱 */
+  color: #e0501f;
 }
-.thumb-pink {
-  background: rgba(212, 83, 126, 0.12);
-  color: #c24372;
+.thumb-yamabuki {
+  background: rgba(244, 183, 64, 0.2); /* 山吹 */
+  color: #c98a12;
 }
-.thumb-teal {
-  background: rgba(29, 158, 117, 0.14);
-  color: #168763;
+.thumb-matcha {
+  background: rgba(61, 174, 124, 0.16); /* 若竹 */
+  color: #2f9468;
 }
 
 /* サムネが実写のとき（アイコン代替を置き換え）。
