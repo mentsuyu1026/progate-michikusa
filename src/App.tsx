@@ -6,6 +6,7 @@ import { useVisitHistory } from "./hooks/useVisitHistory";
 import HistoryPage from "./components/HistoryPage";
 import type { AreaDescription, Coordinates } from "./types";
 import MapView from "./components/MapView";
+import PhotoDescribe from "./components/PhotoDescribe";
 import "./App.css";
 
 // 依存を増やさないためのインラインSVGアイコン。後で写真に差し替え予定。
@@ -256,6 +257,8 @@ function App() {
               >
                 {speaking ? "停止" : "音声ガイド"}
               </button>
+
+              <PhotoDescribe coords={coords} />
 
               {/* エリア名 + サマリー */}
               <article className="card hero-card">
