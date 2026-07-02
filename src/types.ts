@@ -15,9 +15,23 @@ export type Coordinates = {
 };
 
 /**
+ * 各項目に対応する画像検索キーワード。
+ * フロントがこの語で実写(Wikimedia等)を検索して各カードに表示する。
+ * 具体的な固有名詞を含む(例:「浅草 雷門」)のでヒット率が上がる。
+ */
+export type AreaImageQueries = {
+  summary: string;
+  history: string;
+  food: string;
+  souvenir: string;
+  celebrity: string;
+};
+
+/**
  * LLMが生成する地域解説の型(/api/describe のレスポンス)
  * summary/history/food/souvenir/celebrity = STEP2で決めた出力フォーマット
  * areaName/description = フロント互換の概要フィールド
+ * images = 各項目の画像検索キーワード(実写取得用)
  * ※ api/_lib/describe.ts の AreaDescription と同じ形。片方を変えたらもう片方も合わせること
  */
 export type AreaDescription = {
@@ -28,6 +42,7 @@ export type AreaDescription = {
   souvenir: string;
   celebrity: string;
   description: string;
+  images: AreaImageQueries;
 };
 
 /**

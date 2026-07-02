@@ -215,16 +215,22 @@
 
 /* サムネ（アイコン代替） */
 .thumb {
-  height: 72px;
+  height: 110px;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 12px;
 }
+/* フォールバックのアイコン枠：色背景はそのまま、アイコンを枠いっぱいまで拡大して
+   写真サムネと同じ見た目サイズに揃える。写真(.thumb-photo)には余白を付けない。 */
+.thumb:not(.thumb-photo) {
+  padding: 10px;
+  box-sizing: border-box;
+}
 .thumb svg {
-  width: 28px;
-  height: 28px;
+  width: 100%;
+  height: 100%;
 }
 .thumb-coral {
   background: rgba(216, 90, 48, 0.12);
@@ -241,6 +247,24 @@
 .thumb-teal {
   background: rgba(29, 158, 117, 0.14);
   color: #168763;
+}
+
+/* サムネが実写のとき（アイコン代替を置き換え）。
+   幅100%・高さは画像本来の比率のまま → 枠が画像にぴったり沿う（余白も見切れも無し）。 */
+.thumb-photo {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* エリア名カード上部の写真バナー。
+   幅100%・高さは画像本来の比率のまま → 枠が画像にぴったり沿う（余白も見切れも無し）。 */
+.hero-photo {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin-bottom: 14px;
 }
 
 /* スマホ：カテゴリも1カラム */

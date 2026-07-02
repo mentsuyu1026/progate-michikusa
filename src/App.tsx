@@ -1,6 +1,7 @@
 import { useState, type ReactElement } from "react";
 import { useGeolocation } from "./hooks/useGeolocation";
 import { useDescribe } from "./hooks/useDescribe";
+import { useImageSearch, type AreaImageUrls } from "./hooks/useImageSearch";
 import { useVisitHistory } from "./hooks/useVisitHistory";
 import HistoryPage from "./components/HistoryPage";
 import type { AreaDescription, Coordinates } from "./types";
@@ -66,9 +67,11 @@ const categories = [
 function App() {
   const { getLocation } = useGeolocation();
   const { fetchDescribe } = useDescribe();
+  const { fetchAreaImages } = useImageSearch();
   const { records, addRecord, removeRecord } = useVisitHistory();
 
   const [data, setData] = useState<AreaDescription | null>(null);
+  const [imageUrls, setImageUrls] = useState<AreaImageUrls | null>(null);
   const [coords, setCoords] = useState<Coordinates | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -79,11 +82,16 @@ function App() {
     stopSpeak();
     setLoading(true);
     setError(null);
+    setImageUrls(null); // 前回の画像をクリア
     try {
       const coords = await getLocation();
       setCoords(coords);
       const result = await fetchDescribe(coords);
       setData(result);
+      // 画像はテキスト表示の妨げにならないよう、後追いで読み込む(失敗時はアイコン表示のまま)
+      fetchAreaImages(result.images)
+        .then(setImageUrls)
+        .catch(() => setImageUrls(null));
     } catch (e) {
       setError(e instanceof Error ? e.message : "不明なエラー");
     } finally {
@@ -194,18 +202,35 @@ function App() {
 
               {/* エリア名 + サマリー */}
               <article className="card hero-card">
+                {imageUrls?.summary && (
+                  <img
+                    className="hero-photo"
+                    src={imageUrls.summary}
+                    alt={data.areaName}
+                    loading="lazy"
+                  />
+                )}
                 <p className="card-label">地名</p>
                 <h2 className="area-name">{data.areaName}</h2>
                 <p className="card-value">{data.summary}</p>
               </article>
 
-              {/* カテゴリカード（サムネ付き） */}
+              {/* カテゴリカード（サムネ付き：画像が取れたら写真、なければアイコン） */}
               <div className="cards-grid">
                 {categories.map((c) => (
                   <article key={c.key} className="card">
-                    <div className={`thumb thumb-${c.theme}`}>
-                      <Icon name={c.icon} />
-                    </div>
+                    {imageUrls?.[c.key] ? (
+                      <img
+                        className="thumb thumb-photo"
+                        src={imageUrls[c.key] as string}
+                        alt={c.label}
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className={`thumb thumb-${c.theme}`}>
+                        <Icon name={c.icon} />
+                      </div>
+                    )}
                     <p className="card-label">{c.label}</p>
                     <p className="card-value">{data[c.key]}</p>
                   </article>
