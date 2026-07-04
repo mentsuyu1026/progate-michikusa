@@ -1,8 +1,14 @@
 import { useCallback } from "react";
 import type { Coordinates, AreaDescription } from "../types";
 
+// 履歴として渡す最小情報(地名のみ)。
+type HistoryItem = { areaName: string };
+
 type UseDescribeReturn = {
-  fetchDescribe: (coords: Coordinates) => Promise<AreaDescription>;
+  fetchDescribe: (
+    coords: Coordinates,
+    history?: HistoryItem[]
+  ) => Promise<AreaDescription>;
 };
 
 // LLM解説APIのエンドポイント。Vercel上でも、ローカルの `vercel dev` でも同じ相対パスで叩ける。
@@ -15,16 +21,19 @@ const API_URL = "/api/describe";
  *
  * 使い方:
  *   const { fetchDescribe } = useDescribe();
- *   const data = await fetchDescribe(coords);
+ *   const data = await fetchDescribe(coords, history);
  */
 export function useDescribe(): UseDescribeReturn {
   // useCallback で参照を固定。useEffectの依存配列に入れても再生成されない。
   const fetchDescribe = useCallback(
-    async (coords: Coordinates): Promise<AreaDescription> => {
+    async (
+      coords: Coordinates,
+      history: HistoryItem[] = []
+    ): Promise<AreaDescription> => {
       const response = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lat: coords.lat, lng: coords.lng }),
+        body: JSON.stringify({ lat: coords.lat, lng: coords.lng, history }),
       });
 
       // 失敗時はサーバーの { error } を拾って throw。呼び出し側で try/catch する。

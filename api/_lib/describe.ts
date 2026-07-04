@@ -30,6 +30,10 @@ export type AreaDescription = {
   images: AreaImageQueries;
 };
 
+export type VisitHistoryItem = {
+  areaName: string;
+}
+
 type GenerateOptions = {
   /** Gemini APIキー(未指定なら process.env.GEMINI_API_KEY) */
   apiKey?: string;
@@ -37,6 +41,7 @@ type GenerateOptions = {
   model?: string;
   /** テスト用の fetch 差し替え */
   fetchImpl?: typeof fetch;
+  history?: VisitHistoryItem[];
 };
 
 /** Gemini が返す生のJSON(description はこちらでは作らない)。 */
@@ -83,8 +88,8 @@ const RESPONSE_SCHEMA = {
  * Gemini に渡すプロンプトを組み立てる。
  * リスク対策(仕様書9章): 不確かなことは断定させない。
  */
-export function buildPrompt(areaName: string): string {
-  return [
+export function buildPrompt(areaName: string, history: VisitHistoryItem[] = []): string {
+  const lines = [
     `あなたは日本各地の観光案内に詳しいガイドです。`,
     `「${areaName}」について、その土地を初めて訪れた旅行者向けに、特色・歴史・文化をやさしく紹介してください。`,
     ``,
@@ -93,14 +98,34 @@ export function buildPrompt(areaName: string): string {
     `- 各項目は2〜3文程度におさめる。`,
     `- 確証のない事実や数字は断定せず、わかる範囲で無理のない説明にする。`,
     `- 地名が曖昧で特定できない場合は、その地域一帯の一般的な特色を述べる。`,
+  ];
+
+  // 履歴がある場合のみ、繋がりを踏まえる指示を追加する。
+  if (history.length > 0) {
+    const historyText = history.map((h) => `- ${h.areaName}`).join("\n");
+    lines.push(
+      ``,
+      `この旅行者がこれまでに訪れた場所:`,
+      historyText,
+      ``,
+      `- summary の中で、上の訪問先の中に現在地と地理的・歴史的・文化的な繋がりがある場所があれば、`,
+      `  「以前訪れた○○と…」のように、さりげなく一言だけ触れてください。`,
+      `- 繋がりが見当たらない場合は、無理に触れず通常の解説にしてください。`
+    );
+  }
+
+  lines.push(
+    ``,
     `- さらに images として、各項目に合う実写を画像検索で見つけるためのキーワードを付ける。`,
     `  ・できるだけ「固有名詞そのもの」を1語で指定する(建造物名・料理名・商品名・人物名)。`,
     `    例: 歴史→「所沢航空発祥記念館」、グルメ→「狭山茶」、土産→「雷おこし」、有名人→「宮崎駿」。`,
     `  ・各項目で必ず別々の被写体を選ぶ(4枚が同じ建物・同じ写真にならないようにする)。`,
     `  ・「所沢 歴史」「所沢 グルメ」のような『地名+カテゴリ語』は避ける。`,
     `    (その市の代表記事に集中して全部同じ写真になりやすいため)`,
-    `  ・有名な対象が思いつかない項目は、無理に地名を足さず、その分野で最も知られた固有名詞にする。`,
-  ].join("\n");
+    `  ・有名な対象が思いつかない項目は、無理に地名を足さず、その分野で最も知られた固有名詞にする。`
+  );
+  
+  return lines.join("\n");
 }
 
 /**
@@ -127,7 +152,7 @@ export async function generateAreaDescription(
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
   const body = {
-    contents: [{ parts: [{ text: buildPrompt(name) }] }],
+    contents: [{ parts: [{ text: buildPrompt(name, opts.history ?? []) }] }],
     generationConfig: {
       temperature: 0.7,
       responseMimeType: "application/json",
