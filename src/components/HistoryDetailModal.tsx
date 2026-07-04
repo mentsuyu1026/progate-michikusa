@@ -66,6 +66,13 @@ function HistoryDetailModal({ record, onClose }: HistoryDetailModalProps) {
                     <p className="modal-card-label">詳しい紹介</p>
                     <p className="modal-card-value">{record.area.description}</p>
                 </article>
+
+                {record.visitmemo && (
+                    <article className="modal-card modal-card-memo">
+                        <p className="modal-card-label">思い出メモ</p>
+                        <p className="modal-card-value">{record.visitmemo}</p>
+                    </article>
+                )}
             </div>
         </div>
     );

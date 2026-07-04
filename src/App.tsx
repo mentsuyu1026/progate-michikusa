@@ -9,7 +9,14 @@ import MapView from "./components/MapView";
 import "./App.css";
 
 // 依存を増やさないためのインラインSVGアイコン。後で写真に差し替え予定。
-type IconName = "pin" | "history" | "food" | "gift" | "star" | "location";
+type IconName =
+  | "pin"
+  | "history"
+  | "food"
+  | "gift"
+  | "star"
+  | "location"
+  | "memo";
 function Icon({ name }: { name: IconName }) {
   const paths: Record<IconName, ReactElement> = {
     pin: (
@@ -40,6 +47,12 @@ function Icon({ name }: { name: IconName }) {
     ),
     star: (
       <path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9 6.8 19.2l1-5.8L3.5 9.2l5.9-.9z" />
+    ),
+    memo: (
+      <>
+        <path d="M14 3l7 7-9.5 9.5L3 21l1.5-8.5z" />
+        <path d="M12.5 5.5l6 6" />
+      </>
     ),
   };
   return (
@@ -90,7 +103,7 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [speaking, setSpeaking] = useState(false);
   const [mode, setMode] = useState<"current" | "history">("current");
-  const [memo,setMemo] = useState<string|null>(null);
+  const [memo, setMemo] = useState<string | null>(null);
 
   const handleClick = async () => {
     stopSpeak();
@@ -135,8 +148,8 @@ function App() {
     : false;
 
   const handleSave = () => {
-    if (data && coords &&memo&& !isSaved) {
-      addRecord(data, coords,memo);
+    if (data && coords && !isSaved) {
+      addRecord(data, coords, memo ?? "");
     }
   };
 
@@ -313,16 +326,19 @@ function App() {
                 <p className="card-value">{data.description}</p>
               </article>
               {/*思い出メモ*/}
-              <label className="card">
-                思い出を記録しよう！
+              <label className="memo-card">
+                <span className="memo-card-heading">
+                  <Icon name="memo" />
+                  思い出を記録しよう！
+                </span>
                 <textarea
+                  className="memo-textarea"
                   name="postContent"
                   rows={4}
-                  cols={40}
+                  placeholder="この場所で感じたこと、見つけたものを書き留めておこう"
                   value={memo ?? ""}
                   onChange={(e) => setMemo(e.target.value)}
                 />
-
               </label>
 
               {/* 保存ボタン:結果表示の一番下 */}
