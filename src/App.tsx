@@ -73,6 +73,22 @@ const loadingMessages = [
   "おすすめの寄り道を探しています…",
 ];
 
+// 現在地からこの距離(km)より遠いスポットは地図に出さない。
+// (「ヤマハ」→本社(浜松) のように、キーワードが遠地の記事に当たるのを防ぐ)
+const MAX_SPOT_KM = 20;
+
+// 2点間のおおよその距離(km)。ハバーサインの公式。
+function distanceKm(a: Coordinates, b: { lat: number; lng: number }): number {
+  const R = 6371;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
 function App() {
   const { getLocation } = useGeolocation();
   const { fetchDescribe } = useDescribe();
@@ -104,7 +120,8 @@ function App() {
       fetchAreaMedia(result.images)
         .then(({ images, spots }) => {
           setImageUrls(images);
-          setSpots(spots);
+          // 現在地から遠すぎるスポット(キーワードが遠地の記事に当たったもの)は地図から除外。
+          setSpots(spots.filter((s) => distanceKm(coords, s) <= MAX_SPOT_KM));
         })
         .catch(() => {
           setImageUrls(null);
