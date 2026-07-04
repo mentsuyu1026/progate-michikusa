@@ -97,7 +97,8 @@ function App() {
     try {
       const coords = await getLocation();
       setCoords(coords);
-      const result = await fetchDescribe(coords);
+      const history = records.map((r) => ({ areaName: r.area.areaName }));
+      const result = await fetchDescribe(coords, history);
       setData(result);
       // 画像・スポットはテキスト表示の妨げにならないよう、後追いで読み込む
       fetchAreaMedia(result.images)
