@@ -5,7 +5,7 @@
 //   もしくは:  { image: string(base64), mimeType: string, areaName: string }
 //   レスポンス: { areaName, summary, subject, context, description }
 
-import { generateImageDescription } from "./_lib/describeImage.ts";
+import { generateImageDescription } from "./_lib/describeImage.js";
 
 type ApiRequest = {
     method?: string;
