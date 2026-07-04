@@ -20,11 +20,79 @@
   /* 青海波（せいがいは）：波が重なる伝統文様 */
   background-color: var(--bg);
   background-image:
-    radial-gradient(circle at 100% 150%, var(--bg) 24%, var(--wave) 25%, var(--wave) 28%, var(--bg) 29%, var(--bg) 36%, var(--wave) 37%, var(--wave) 40%, transparent 41%),
-    radial-gradient(circle at 0 150%, var(--bg) 24%, var(--wave) 25%, var(--wave) 28%, var(--bg) 29%, var(--bg) 36%, var(--wave) 37%, var(--wave) 40%, transparent 41%),
-    radial-gradient(circle at 50% 100%, var(--bg) 10%, var(--wave) 11%, var(--wave) 23%, var(--bg) 24%, var(--bg) 30%, var(--wave) 31%, var(--wave) 43%, var(--bg) 44%, var(--bg) 50%, var(--wave) 51%, var(--wave) 63%, var(--bg) 64%, var(--bg) 71%, transparent 71%),
-    radial-gradient(circle at 100% 50%, var(--bg) 5%, var(--wave) 6%, var(--wave) 15%, var(--bg) 16%, var(--bg) 20%, var(--wave) 21%, var(--wave) 30%, var(--bg) 31%, var(--bg) 35%, var(--wave) 36%, var(--wave) 45%, var(--bg) 46%, var(--bg) 50%, transparent 50%),
-    radial-gradient(circle at 0 50%, var(--bg) 5%, var(--wave) 6%, var(--wave) 15%, var(--bg) 16%, var(--bg) 20%, var(--wave) 21%, var(--wave) 30%, var(--bg) 31%, var(--bg) 35%, var(--wave) 36%, var(--wave) 45%, var(--bg) 46%, var(--bg) 50%, transparent 50%);
+    radial-gradient(
+      circle at 100% 150%,
+      var(--bg) 24%,
+      var(--wave) 25%,
+      var(--wave) 28%,
+      var(--bg) 29%,
+      var(--bg) 36%,
+      var(--wave) 37%,
+      var(--wave) 40%,
+      transparent 41%
+    ),
+    radial-gradient(
+      circle at 0 150%,
+      var(--bg) 24%,
+      var(--wave) 25%,
+      var(--wave) 28%,
+      var(--bg) 29%,
+      var(--bg) 36%,
+      var(--wave) 37%,
+      var(--wave) 40%,
+      transparent 41%
+    ),
+    radial-gradient(
+      circle at 50% 100%,
+      var(--bg) 10%,
+      var(--wave) 11%,
+      var(--wave) 23%,
+      var(--bg) 24%,
+      var(--bg) 30%,
+      var(--wave) 31%,
+      var(--wave) 43%,
+      var(--bg) 44%,
+      var(--bg) 50%,
+      var(--wave) 51%,
+      var(--wave) 63%,
+      var(--bg) 64%,
+      var(--bg) 71%,
+      transparent 71%
+    ),
+    radial-gradient(
+      circle at 100% 50%,
+      var(--bg) 5%,
+      var(--wave) 6%,
+      var(--wave) 15%,
+      var(--bg) 16%,
+      var(--bg) 20%,
+      var(--wave) 21%,
+      var(--wave) 30%,
+      var(--bg) 31%,
+      var(--bg) 35%,
+      var(--wave) 36%,
+      var(--wave) 45%,
+      var(--bg) 46%,
+      var(--bg) 50%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 0 50%,
+      var(--bg) 5%,
+      var(--wave) 6%,
+      var(--wave) 15%,
+      var(--bg) 16%,
+      var(--bg) 20%,
+      var(--wave) 21%,
+      var(--wave) 30%,
+      var(--bg) 31%,
+      var(--bg) 35%,
+      var(--wave) 36%,
+      var(--wave) 45%,
+      var(--bg) 46%,
+      var(--bg) 50%,
+      transparent 50%
+    );
   background-size: 40px 40px;
   border: 1px solid var(--border);
 }
@@ -298,7 +366,7 @@
 /* マップ枠（プレースホルダー → 後で Leaflet） */
 .map-frame {
   position: relative;
-  height: 280px;          /* 170 → 280(地図はある程度の高さが必要) */
+  height: 280px; /* 170 → 280(地図はある程度の高さが必要) */
   border-radius: 14px;
   overflow: hidden;
   border: 1px solid var(--border);
@@ -463,6 +531,55 @@
 .header-toggle:hover {
   background: var(--accent-bg);
   border-color: var(--accent);
+}
+
+/* 思い出メモ:記入を誘う特別感のあるカード */
+.memo-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 20px;
+  background: var(--accent-bg);
+  border: 1px dashed var(--accent-border);
+  border-radius: 14px;
+  cursor: text;
+}
+.memo-card-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--vermilion);
+}
+.memo-card-heading svg {
+  width: 17px;
+  height: 17px;
+  color: var(--vermilion);
+}
+.memo-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-h);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.memo-textarea::placeholder {
+  color: var(--text);
+}
+.memo-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
 }
 
 /* 保存ボタン:結果表示の一番下 */
