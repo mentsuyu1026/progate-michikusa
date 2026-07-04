@@ -56,8 +56,9 @@ export type AreaDescription = {
  * - visitedAt: 訪問日時(ISO 8601 文字列)。並び替えや日付表示に使う
  */
 export type VisitRecord = {
-    id: string;
-    area: AreaDescription;
-    coords: Coordinates;
-    visitedAt: string;
+  id: string;
+  area: AreaDescription;
+  coords: Coordinates;
+  visitedAt: string;
+  visitmemo: string;
 };

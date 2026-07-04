@@ -61,7 +61,12 @@ function Icon({ name }: { name: IconName }) {
 const categories = [
   { key: "history", label: "簡単な歴史", icon: "history", theme: "ai" },
   { key: "food", label: "ご当地グルメ", icon: "food", theme: "shu" },
-  { key: "souvenir", label: "おすすめのお土産", icon: "gift", theme: "yamabuki" },
+  {
+    key: "souvenir",
+    label: "おすすめのお土産",
+    icon: "gift",
+    theme: "yamabuki",
+  },
   { key: "celebrity", label: "出身有名人", icon: "star", theme: "matcha" },
 ] as const;
 
@@ -85,12 +90,14 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [speaking, setSpeaking] = useState(false);
   const [mode, setMode] = useState<"current" | "history">("current");
+  const [memo,setMemo] = useState<string|null>(null);
 
   const handleClick = async () => {
     stopSpeak();
     setLoading(true);
     setError(null);
     setImageUrls(null); // 前回の画像をクリア
+    setMemo(null); // 前回のメモをクリア
     try {
       const coords = await getLocation();
       setCoords(coords);
@@ -128,8 +135,8 @@ function App() {
     : false;
 
   const handleSave = () => {
-    if (data && coords && !isSaved) {
-      addRecord(data, coords);
+    if (data && coords &&memo&& !isSaved) {
+      addRecord(data, coords,memo);
     }
   };
 
@@ -157,7 +164,9 @@ function App() {
           {!loading && !data && (
             <div className="hero">
               <h1>現在地を調べる</h1>
-              <p className="hero-sub">ボタンひとつで、今いる街をAIがご案内します。</p>
+              <p className="hero-sub">
+                ボタンひとつで、今いる街をAIがご案内します。
+              </p>
 
               <ol className="howto">
                 <li>
@@ -234,7 +243,11 @@ function App() {
                 </span>
               </div> */}
               {coords && (
-                <div className="map-frame" role="img" aria-label="現在地周辺のマップ">
+                <div
+                  className="map-frame"
+                  role="img"
+                  aria-label="現在地周辺のマップ"
+                >
                   <MapView center={coords} />
                   <span className="map-chip">
                     <Icon name="location" />
@@ -299,6 +312,18 @@ function App() {
                 <p className="card-label">詳しい紹介</p>
                 <p className="card-value">{data.description}</p>
               </article>
+              {/*思い出メモ*/}
+              <label className="card">
+                思い出を記録しよう！
+                <textarea
+                  name="postContent"
+                  rows={4}
+                  cols={40}
+                  value={memo ?? ""}
+                  onChange={(e) => setMemo(e.target.value)}
+                />
+
+              </label>
 
               {/* 保存ボタン:結果表示の一番下 */}
               <button
