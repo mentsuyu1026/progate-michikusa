@@ -488,6 +488,22 @@
   height: auto;
 }
 
+/* 画像＋キャプションのまとまり。下余白はfigureが持ち、画像自身の余白は消す */
+.photo-figure {
+  margin: 0 0 12px;
+}
+.photo-figure .thumb-photo,
+.photo-figure .hero-photo {
+  margin-bottom: 0;
+}
+/* 「この画像は何か」を示すキャプション(Wikipedia記事名) */
+.photo-caption {
+  margin: 5px 2px 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text);
+}
+
 /* エリア名カード上部の写真バナー。
    幅100%・高さは画像本来の比率のまま → 枠が画像にぴったり沿う（余白も見切れも無し）。 */
 .hero-photo {

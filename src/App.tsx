@@ -115,6 +115,7 @@ function App() {
 
   const [data, setData] = useState<AreaDescription | null>(null);
   const [imageUrls, setImageUrls] = useState<AreaImageUrls | null>(null);
+  const [captions, setCaptions] = useState<AreaImageUrls | null>(null);
   const [spots, setSpots] = useState<AreaSpot[]>([]);
   const [coords, setCoords] = useState<Coordinates | null>(null);
   const [loading, setLoading] = useState(false);
@@ -128,6 +129,7 @@ function App() {
     setLoading(true);
     setError(null);
     setImageUrls(null); // 前回の画像をクリア
+    setCaptions(null); // 前回のキャプションをクリア
     setSpots([]); // 前回のスポットをクリア
     setMemo(null); // 前回のメモをクリア
     try {
@@ -138,13 +140,15 @@ function App() {
       setData(result);
       // 画像・スポットはテキスト表示の妨げにならないよう、後追いで読み込む
       fetchAreaMedia(result.images)
-        .then(({ images, spots }) => {
+        .then(({ images, captions, spots }) => {
           setImageUrls(images);
+          setCaptions(captions);
           // 現在地から遠すぎるスポット(キーワードが遠地の記事に当たったもの)は地図から除外。
           setSpots(spots.filter((s) => distanceKm(coords, s) <= MAX_SPOT_KM));
         })
         .catch(() => {
           setImageUrls(null);
+          setCaptions(null);
           setSpots([]);
         });
     } catch (e) {
@@ -311,12 +315,19 @@ function App() {
               {/* エリア名 + サマリー */}
               <article className="card hero-card">
                 {imageUrls?.summary && (
-                  <img
-                    className="hero-photo"
-                    src={imageUrls.summary}
-                    alt={data.areaName}
-                    loading="lazy"
-                  />
+                  <figure className="photo-figure">
+                    <img
+                      className="hero-photo"
+                      src={imageUrls.summary}
+                      alt={captions?.summary ?? data.areaName}
+                      loading="lazy"
+                    />
+                    {captions?.summary && (
+                      <figcaption className="photo-caption">
+                        {captions.summary}
+                      </figcaption>
+                    )}
+                  </figure>
                 )}
                 <p className="card-label">地名</p>
                 <h2 className="area-name">{data.areaName}</h2>
@@ -328,12 +339,19 @@ function App() {
                 {categories.map((c) => (
                   <article key={c.key} className="card">
                     {imageUrls?.[c.key] ? (
-                      <img
-                        className="thumb thumb-photo"
-                        src={imageUrls[c.key] as string}
-                        alt={c.label}
-                        loading="lazy"
-                      />
+                      <figure className="photo-figure">
+                        <img
+                          className="thumb thumb-photo"
+                          src={imageUrls[c.key] as string}
+                          alt={captions?.[c.key] ?? c.label}
+                          loading="lazy"
+                        />
+                        {captions?.[c.key] && (
+                          <figcaption className="photo-caption">
+                            {captions[c.key]}
+                          </figcaption>
+                        )}
+                      </figure>
                     ) : (
                       <div className={`thumb thumb-${c.theme}`}>
                         <Icon name={c.icon} />
