@@ -9,7 +9,7 @@
 //
 // APIキーはフロントに出さず、Vercelの環境変数 GEMINI_API_KEY からサーバー側でのみ読む(仕様書9章)。
 
-import { generateAreaDescription } from "./_lib/describe";
+import { generateAreaDescription } from "./_lib/describe.js";
 
 // @vercel/node に依存せず動かすための最小限の型(req/res の使う部分だけ)。
 type ApiRequest = {
