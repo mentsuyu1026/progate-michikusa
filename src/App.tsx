@@ -4,7 +4,7 @@ import { useDescribe } from "./hooks/useDescribe";
 import { useImageSearch, type AreaImageUrls } from "./hooks/useImageSearch";
 import { useVisitHistory } from "./hooks/useVisitHistory";
 import HistoryPage from "./components/HistoryPage";
-import type { AreaDescription, Coordinates } from "./types";
+import type { AreaDescription, Coordinates, AreaSpot } from "./types";
 import MapView from "./components/MapView";
 import PhotoDescribe from "./components/PhotoDescribe";
 import "./App.css";
@@ -76,11 +76,12 @@ const loadingMessages = [
 function App() {
   const { getLocation } = useGeolocation();
   const { fetchDescribe } = useDescribe();
-  const { fetchAreaImages } = useImageSearch();
+  const { fetchAreaMedia } = useImageSearch();
   const { records, addRecord, removeRecord } = useVisitHistory();
 
   const [data, setData] = useState<AreaDescription | null>(null);
   const [imageUrls, setImageUrls] = useState<AreaImageUrls | null>(null);
+  const [spots, setSpots] = useState<AreaSpot[]>([]);
   const [coords, setCoords] = useState<Coordinates | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -92,15 +93,22 @@ function App() {
     setLoading(true);
     setError(null);
     setImageUrls(null); // 前回の画像をクリア
+    setSpots([]); // 前回のスポットをクリア
     try {
       const coords = await getLocation();
       setCoords(coords);
       const result = await fetchDescribe(coords);
       setData(result);
-      // 画像はテキスト表示の妨げにならないよう、後追いで読み込む(失敗時はアイコン表示のまま)
-      fetchAreaImages(result.images)
-        .then(setImageUrls)
-        .catch(() => setImageUrls(null));
+      // 画像・スポットはテキスト表示の妨げにならないよう、後追いで読み込む
+      fetchAreaMedia(result.images)
+        .then(({ images, spots }) => {
+          setImageUrls(images);
+          setSpots(spots);
+        })
+        .catch(() => {
+          setImageUrls(null);
+          setSpots([]);
+        });
     } catch (e) {
       setError(e instanceof Error ? e.message : "不明なエラー");
     } finally {
@@ -236,7 +244,7 @@ function App() {
               </div> */}
               {coords && (
                 <div className="map-frame" role="img" aria-label="現在地周辺のマップ">
-                  <MapView center={coords} />
+                  <MapView center={coords} spots={spots} />
                   <span className="map-chip">
                     <Icon name="location" />
                     {data.areaName}
