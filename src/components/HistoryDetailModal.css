@@ -105,6 +105,11 @@
     white-space: pre-wrap;
 }
 
+/* 思い出メモ:他のカードと区別できるよう上の余白を広めに取る */
+.modal-card-memo {
+    margin-top: 24px;
+}
+
 /* アニメーション */
 @keyframes fade-in {
     from {
