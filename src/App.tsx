@@ -4,7 +4,7 @@ import { useDescribe } from "./hooks/useDescribe";
 import { useImageSearch, type AreaImageUrls } from "./hooks/useImageSearch";
 import { useVisitHistory } from "./hooks/useVisitHistory";
 import HistoryPage from "./components/HistoryPage";
-import type { AreaDescription, Coordinates } from "./types";
+import type { AreaDescription, Coordinates, AreaSpot } from "./types";
 import MapView from "./components/MapView";
 import PhotoDescribe from "./components/PhotoDescribe";
 import "./App.css";
@@ -91,14 +91,31 @@ const loadingMessages = [
   "おすすめの寄り道を探しています…",
 ];
 
+// 現在地からこの距離(km)より遠いスポットは地図に出さない。
+// (「ヤマハ」→本社(浜松) のように、キーワードが遠地の記事に当たるのを防ぐ)
+const MAX_SPOT_KM = 20;
+
+// 2点間のおおよその距離(km)。ハバーサインの公式。
+function distanceKm(a: Coordinates, b: { lat: number; lng: number }): number {
+  const R = 6371;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
 function App() {
   const { getLocation } = useGeolocation();
   const { fetchDescribe } = useDescribe();
-  const { fetchAreaImages } = useImageSearch();
+  const { fetchAreaMedia } = useImageSearch();
   const { records, addRecord, removeRecord } = useVisitHistory();
 
   const [data, setData] = useState<AreaDescription | null>(null);
   const [imageUrls, setImageUrls] = useState<AreaImageUrls | null>(null);
+  const [spots, setSpots] = useState<AreaSpot[]>([]);
   const [coords, setCoords] = useState<Coordinates | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -111,6 +128,7 @@ function App() {
     setLoading(true);
     setError(null);
     setImageUrls(null); // 前回の画像をクリア
+    setSpots([]); // 前回のスポットをクリア
     setMemo(null); // 前回のメモをクリア
     try {
       const coords = await getLocation();
@@ -118,10 +136,17 @@ function App() {
       const history = records.map((r) => ({ areaName: r.area.areaName }));
       const result = await fetchDescribe(coords, history);
       setData(result);
-      // 画像はテキスト表示の妨げにならないよう、後追いで読み込む(失敗時はアイコン表示のまま)
-      fetchAreaImages(result.images)
-        .then(setImageUrls)
-        .catch(() => setImageUrls(null));
+      // 画像・スポットはテキスト表示の妨げにならないよう、後追いで読み込む
+      fetchAreaMedia(result.images)
+        .then(({ images, spots }) => {
+          setImageUrls(images);
+          // 現在地から遠すぎるスポット(キーワードが遠地の記事に当たったもの)は地図から除外。
+          setSpots(spots.filter((s) => distanceKm(coords, s) <= MAX_SPOT_KM));
+        })
+        .catch(() => {
+          setImageUrls(null);
+          setSpots([]);
+        });
     } catch (e) {
       setError(e instanceof Error ? e.message : "不明なエラー");
     } finally {
@@ -258,12 +283,8 @@ function App() {
                 </span>
               </div> */}
               {coords && (
-                <div
-                  className="map-frame"
-                  role="img"
-                  aria-label="現在地周辺のマップ"
-                >
-                  <MapView center={coords} />
+                <div className="map-frame" role="img" aria-label="現在地周辺のマップ">
+                  <MapView center={coords} spots={spots} />
                   <span className="map-chip">
                     <Icon name="location" />
                     {data.areaName}

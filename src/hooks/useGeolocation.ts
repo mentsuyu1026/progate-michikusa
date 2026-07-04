@@ -25,7 +25,9 @@ export function useGeolocation() {
         },
         (err) => {
           reject(new Error(err.message));
-        }
+        },
+        // GPS優先で精度を上げる。timeoutで固まりを防ぎ、maximumAge:0で毎回新しく測位する。
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     });
   };

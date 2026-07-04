@@ -46,6 +46,21 @@ export type AreaDescription = {
 };
 
 /**
+ * 地図に表示する「有名スポット」1件分。
+ * 各カード(歴史/グルメ等)の題材が実在の場所のときだけ作られる。
+ * 商品(狭山茶)や人物(宮崎駿)は座標を持たないので対象外＝自然にピンが立たない。
+ * - key: どのカード由来か
+ * - label: スポット名(Wikipedia記事名)。地図のポップアップに表示
+ * - lat/lng: 緯度・経度
+ */
+export type AreaSpot = {
+  key: keyof AreaImageQueries;
+  label: string;
+  lat: number;
+  lng: number;
+};
+
+/**
  * 訪問履歴の1件分を表す型。
  * localStorage に保存して、後から一覧表示や再表示に使う。
  *
