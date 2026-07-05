@@ -6,6 +6,7 @@ import { useVisitHistory } from "./hooks/useVisitHistory";
 import HistoryPage from "./components/HistoryPage";
 import type { AreaDescription, Coordinates } from "./types";
 import MapView from "./components/MapView";
+import { FoodStampMaker } from "./components/FoodStampMaker";
 import "./App.css";
 
 // 依存を増やさないためのインラインSVGアイコン。後で写真に差し替え予定。
@@ -102,7 +103,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [speaking, setSpeaking] = useState(false);
-  const [mode, setMode] = useState<"current" | "history">("current");
+  const [mode, setMode] = useState<"current" | "history" | "food">("current");
   const [memo, setMemo] = useState<string | null>(null);
 
   const handleClick = async () => {
@@ -160,18 +161,26 @@ function App() {
           <Icon name="pin" />
           みちくさ
         </span>
-        <button
-          className="header-toggle"
-          onClick={() =>
-            setMode((prev) => (prev === "current" ? "history" : "current"))
-          }
-        >
-          {mode === "current" ? "履歴" : "戻る"}
-        </button>
+        {mode === "current" ? (
+          <span style={{ display: "flex", gap: 8 }}>
+            <button className="header-toggle" onClick={() => setMode("food")}>
+              グルメ
+            </button>
+            <button className="header-toggle" onClick={() => setMode("history")}>
+              履歴
+            </button>
+          </span>
+        ) : (
+          <button className="header-toggle" onClick={() => setMode("current")}>
+            戻る
+          </button>
+        )}
       </header>
 
       {mode === "history" ? (
         <HistoryPage records={records} onRemove={removeRecord} />
+      ) : mode === "food" ? (
+        <FoodStampMaker areaName={data?.areaName} />
       ) : (
         <>
           {!loading && !data && (

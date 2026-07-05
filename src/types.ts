@@ -62,3 +62,32 @@ export type VisitRecord = {
   visitedAt: string;
   visitmemo: string;
 };
+
+/**
+ * 料理写真をGemini Visionで認識した結果（/api/food-stamp のレスポンス）。
+ * - isFood: 写真に料理が写っているか
+ * - dishName: 料理名
+ * - oneLine: その料理の一言紹介
+ * - specialties: その土地の名物リスト（再訪の"あと◯品"表示に使う）
+ * - nextDish: 次におすすめの一品（再訪誘導）
+ */
+export type FoodRecognition = {
+  isFood: boolean;
+  dishName: string;
+  oneLine: string;
+  specialties: string[];
+  nextDish: string;
+};
+
+/**
+ * 御朱印帳に貯める「グルメスタンプ」1件。localStorageに保存する。
+ * - imageDataUrl: 撮った写真から作った御朱印風スタンプ画像（dataURL）
+ */
+export type FoodStamp = {
+  id: string;
+  dishName: string;
+  areaName: string;
+  oneLine: string;
+  imageDataUrl: string;
+  eatenAt: string;
+};

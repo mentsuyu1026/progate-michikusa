@@ -1,0 +1,172 @@
+/* ===== 御朱印帳（茶色の革張り）===== */
+.stampbook {
+  position: relative;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 22px 20px;
+  border-radius: 14px;
+  /* 革の質感：茶系の重ねグラデ＋うっすらグレイン */
+  background-color: #6b4426;
+  background-image:
+    linear-gradient(135deg, #74492a 0%, #5e3c22 45%, #4c3019 100%),
+    repeating-linear-gradient(
+      92deg,
+      rgba(0, 0, 0, 0.05) 0 2px,
+      rgba(255, 255, 255, 0.02) 2px 4px
+    );
+  box-shadow:
+    0 14px 34px rgba(40, 24, 10, 0.4),
+    inset 0 0 0 2px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* 縫い目（ステッチ）風の内枠 */
+.stampbook::before {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border: 2px dashed rgba(230, 200, 140, 0.5);
+  border-radius: 10px;
+  pointer-events: none;
+}
+
+/* 留め具の革バンド */
+.stampbook-band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 28px;
+  width: 26px;
+  background: linear-gradient(90deg, #40280f, #5a3a1f, #40280f);
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
+  opacity: 0.85;
+}
+
+/* 金の箔押しタイトル */
+.stampbook-plate {
+  position: relative;
+  text-align: center;
+  margin: 6px 0 18px;
+}
+.stampbook-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.4em;
+  color: #ecCF92;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+}
+.stampbook-sub {
+  margin: 4px 0 0;
+  font-size: 12px;
+  letter-spacing: 0.3em;
+  color: rgba(236, 207, 146, 0.75);
+}
+
+/* 中の和紙ページ */
+.stampbook-pages {
+  position: relative;
+  border-radius: 6px;
+  padding: 22px 18px;
+  background-color: #f5ecd8;
+  /* 折本のような薄い縦の罫 */
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0 calc(33.33% - 1px),
+    rgba(120, 80, 40, 0.08) calc(33.33% - 1px) 33.33%
+  );
+  box-shadow: inset 0 0 26px rgba(120, 80, 40, 0.18);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.stampbook-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: #8a6b48;
+  font-size: 14px;
+  line-height: 1.8;
+  padding: 20px 0;
+}
+
+/* スタンプ1マス */
+.stamp-cell {
+  aspect-ratio: 3 / 4;
+  background: #fbf6e8;
+  border: 1px solid rgba(120, 80, 40, 0.2);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 8px;
+  box-shadow: 0 1px 3px rgba(120, 80, 40, 0.12);
+}
+.stamp-cell.empty {
+  background: rgba(251, 246, 232, 0.4);
+  border-style: dashed;
+}
+
+/* 写真から作ったスタンプ画像 */
+.stamp-img {
+  width: 84px;
+  height: 84px;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 1px 4px rgba(120, 80, 40, 0.25);
+}
+
+/* 御朱印風プレースホルダー（スタンプ未指定時） */
+.seal {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  border: 3px double #b83b2e;
+  color: #b83b2e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 15px;
+  text-align: center;
+  line-height: 1.1;
+  transform: rotate(-6deg);
+  background: rgba(184, 59, 46, 0.05);
+}
+.seal-empty {
+  border-color: #bbaa88;
+  color: #bbaa88;
+  transform: none;
+  background: transparent;
+}
+
+.stamp-name {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #5e3c22;
+  text-align: center;
+}
+.stamp-name.muted {
+  color: #a8906e;
+  font-weight: 400;
+}
+.stamp-date {
+  margin: 0;
+  font-size: 11px;
+  color: #9a7c56;
+  letter-spacing: 0.05em;
+}
+
+@media (max-width: 480px) {
+  .stampbook-pages {
+    grid-template-columns: repeat(2, 1fr);
+    background-image: repeating-linear-gradient(
+      90deg,
+      transparent 0 calc(50% - 1px),
+      rgba(120, 80, 40, 0.08) calc(50% - 1px) 50%
+    );
+  }
+}
