@@ -1,10 +1,13 @@
 /* ===== 御朱印帳（茶色の革張り）===== */
 .stampbook {
   position: relative;
+  box-sizing: border-box;
+  width: 100%;
   max-width: 680px;
   margin: 0 auto;
   padding: 22px 20px;
   border-radius: 14px;
+  overflow: hidden;
   /* 革の質感：茶系の重ねグラデ＋うっすらグレイン */
   background-color: #6b4426;
   background-image:
@@ -90,8 +93,9 @@
   padding: 20px 0;
 }
 
-/* スタンプ1マス */
+/* スタンプ1マス（クリックで思い出を開く） */
 .stamp-cell {
+  position: relative;
   aspect-ratio: 3 / 4;
   background: #fbf6e8;
   border: 1px solid rgba(120, 80, 40, 0.2);
@@ -103,10 +107,114 @@
   gap: 8px;
   padding: 10px 8px;
   box-shadow: 0 1px 3px rgba(120, 80, 40, 0.12);
+  font: inherit;
+  color: inherit;
+  text-align: center;
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.2s ease;
+}
+button.stamp-cell:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(120, 80, 40, 0.25);
 }
 .stamp-cell.empty {
   background: rgba(251, 246, 232, 0.4);
   border-style: dashed;
+  cursor: default;
+}
+
+/* メモありの印 */
+.stamp-memo-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #b83b2e;
+}
+
+/* 思い出の詳細モーダル */
+.stamp-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(40, 24, 10, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.stamp-modal-card {
+  position: relative;
+  background: #fbf6e8;
+  border-radius: 14px;
+  padding: 22px 20px 24px;
+  max-width: 340px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.4);
+}
+.stamp-modal-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  border: none;
+  background: transparent;
+  font-size: 24px;
+  line-height: 1;
+  color: #8a6b48;
+  cursor: pointer;
+}
+.stamp-modal-img {
+  width: 180px;
+  height: 180px;
+  border-radius: 12px;
+  object-fit: cover;
+  box-shadow: 0 4px 12px rgba(120, 80, 40, 0.3);
+}
+.stamp-modal-name {
+  margin: 12px 0 2px;
+  font-size: 20px;
+  color: #5e3c22;
+}
+.stamp-modal-meta {
+  margin: 0;
+  font-size: 12px;
+  color: #9a7c56;
+}
+.stamp-modal-oneline {
+  margin: 10px 0 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #5e3c22;
+}
+.stamp-modal-memo {
+  margin-top: 14px;
+  text-align: left;
+  background: #fff;
+  border: 1px solid rgba(120, 80, 40, 0.2);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.stamp-modal-memo-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #b83b2e;
+  margin-bottom: 4px;
+}
+.stamp-modal-memo p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #5e3c22;
+  white-space: pre-wrap;
 }
 
 /* 写真から作ったスタンプ画像 */

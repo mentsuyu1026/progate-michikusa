@@ -2,9 +2,10 @@
 // Vercel Function: POST /api/describe
 //
 // 仕様書6章のインターフェイスに準拠しつつ、今回は「地域名 → 解説JSON」のコア部分を実装。
-//   リクエスト: { areaName: string }                  ← 地域名を直接渡す(今回のメイン)
-//   リクエスト: { lat: number, lng: number }          ← GPS担当との結合用(Nominatim逆ジオは別途連携予定)
-//   レスポンス: { areaName, summary, history, food, souvenir, celebrity, description }
+//   リクエスト: { areaName: string }                          ← 地域名を直接渡す
+//   リクエスト: { lat: number, lng: number }                  ← GPS担当との結合用(Nominatim逆ジオ)
+//   リクエスト: { ..., history: { areaName: string }[] }      ← 過去の訪問履歴(任意)
+//   レスポンス: { areaName, summary, history, food, souvenir, celebrity, description, images }
 //
 // APIキーはフロントに出さず、Vercelの環境変数 GEMINI_API_KEY からサーバー側でのみ読む(仕様書9章)。
 
@@ -24,6 +25,7 @@ type DescribeBody = {
   areaName?: string;
   lat?: number;
   lng?: number;
+  history?: { areaName?: string }[];
 };
 
 export default async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
@@ -37,7 +39,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse): Promis
     const body: DescribeBody =
       typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body as DescribeBody) ?? {};
     let { areaName } = body;
-    const { lat, lng } = body;
+    const { lat, lng, history } = body;
 
     // 座標が来た場合は逆ジオコーディングで地域名に変換(Nominatim連携)。
     if (!areaName && lat != null && lng != null) {
@@ -49,7 +51,15 @@ export default async function handler(req: ApiRequest, res: ApiResponse): Promis
       return;
     }
 
-    const result = await generateAreaDescription(areaName);
+    // 履歴は直近8件に制限し、現在地と同じ地名は除外する(自分自身との繋がりは無意味なため)。
+    const safeHistory = Array.isArray(history)
+      ? history
+          .filter((h): h is { areaName: string } => Boolean(h?.areaName) && h!.areaName !== areaName)
+          .slice(-8)
+          .map((h) => ({ areaName: h.areaName }))
+      : [];
+
+    const result = await generateAreaDescription(areaName, { history: safeHistory });
     res.status(200).json(result);
   } catch (err) {
     // レスポンスが崩れたとき等のエラーハンドリング(仕様書STEP5)。

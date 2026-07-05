@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { FoodStamp } from "../types";
 import "./StampBook.css";
 
@@ -41,6 +42,8 @@ function formatDate(iso: string): string {
 
 export function StampBook({ stamps, emptySlots = 3 }: Props) {
   const list = stamps ?? loadStamps();
+  // クリックで開く思い出の詳細。
+  const [selected, setSelected] = useState<FoodStamp | null>(null);
 
   return (
     <div className="stampbook">
@@ -61,14 +64,20 @@ export function StampBook({ stamps, emptySlots = 3 }: Props) {
         )}
 
         {list.map((s) => (
-          <div className="stamp-cell" key={s.id}>
+          <button
+            className="stamp-cell"
+            key={s.id}
+            onClick={() => setSelected(s)}
+            aria-label={`${s.dishName}の思い出を見る`}
+          >
             <img className="stamp-img" src={s.imageDataUrl} alt={s.dishName} />
             <p className="stamp-name">{s.dishName}</p>
             <p className="stamp-date">
               {s.areaName ? `${s.areaName}・` : ""}
               {formatDate(s.eatenAt)}
             </p>
-          </div>
+            {s.memo && <span className="stamp-memo-dot" aria-hidden="true" />}
+          </button>
         ))}
 
         {Array.from({ length: emptySlots }).map((_, i) => (
@@ -80,6 +89,38 @@ export function StampBook({ stamps, emptySlots = 3 }: Props) {
           </div>
         ))}
       </div>
+
+      {/* 思い出の詳細 */}
+      {selected && (
+        <div className="stamp-modal" onClick={() => setSelected(null)}>
+          <div className="stamp-modal-card" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="stamp-modal-close"
+              onClick={() => setSelected(null)}
+              aria-label="閉じる"
+            >
+              ×
+            </button>
+            <img
+              className="stamp-modal-img"
+              src={selected.imageDataUrl}
+              alt={selected.dishName}
+            />
+            <h3 className="stamp-modal-name">{selected.dishName}</h3>
+            <p className="stamp-modal-meta">
+              {selected.areaName ? `${selected.areaName}・` : ""}
+              {formatDate(selected.eatenAt)}
+            </p>
+            {selected.oneLine && (
+              <p className="stamp-modal-oneline">{selected.oneLine}</p>
+            )}
+            <div className="stamp-modal-memo">
+              <span className="stamp-modal-memo-label">思い出メモ</span>
+              <p>{selected.memo ? selected.memo : "（メモはありません）"}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

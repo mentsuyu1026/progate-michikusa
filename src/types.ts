@@ -34,6 +34,20 @@ export type AreaImageQueries = {
  * images = 各項目の画像検索キーワード(実写取得用)
  * ※ api/_lib/describe.ts の AreaDescription と同じ形。片方を変えたらもう片方も合わせること
  */
+/** ふらっと来た人向けの提案（2000円以内・徒歩20分以内）。 */
+export type WanderPick = {
+  name: string;
+  price: string; // ¥表記の目安（無料なら「無料」）
+  walkMin: number; // 徒歩目安（分）
+  note: string;
+};
+
+/** その地域で使えるお得・メリットのあるサービス。 */
+export type LocalDeal = {
+  title: string;
+  detail: string;
+};
+
 export type AreaDescription = {
   areaName: string;
   summary: string;
@@ -43,6 +57,25 @@ export type AreaDescription = {
   celebrity: string;
   description: string;
   images: AreaImageQueries;
+  /** ふらっと向けの提案（古い保存データには無い場合があるので任意） */
+  wanderPicks?: WanderPick[];
+  /** その街で使えるお得（古い保存データには無い場合があるので任意） */
+  deals?: LocalDeal[];
+};
+
+/**
+ * 地図に表示する「有名スポット」1件分。
+ * 各カード(歴史/グルメ等)の題材が実在の場所のときだけ作られる。
+ * 商品(狭山茶)や人物(宮崎駿)は座標を持たないので対象外＝自然にピンが立たない。
+ * - key: どのカード由来か
+ * - label: スポット名(Wikipedia記事名)。地図のポップアップに表示
+ * - lat/lng: 緯度・経度
+ */
+export type AreaSpot = {
+  key: keyof AreaImageQueries;
+  label: string;
+  lat: number;
+  lng: number;
 };
 
 /**
@@ -90,4 +123,21 @@ export type FoodStamp = {
   oneLine: string;
   imageDataUrl: string;
   eatenAt: string;
+  /** 食べたときの思い出メモ（御朱印帳から見返せる）。 */
+  memo: string;
+};
+
+/** 軌跡上の1点。 */
+export type TrackPoint = {
+  lat: number;
+  lng: number;
+  t: number; // タイムスタンプ(Date.now())。UTC/ローカルを気にせず数値で持つ。
+};
+
+/** 1回の記録セッション(開始〜停止までの軌跡)。 */
+export type TrackSession = {
+  id: string;
+  startedAt: string; // ISO文字列(表示用)
+  endedAt: string | null; // 記録中は null
+  points: TrackPoint[];
 };

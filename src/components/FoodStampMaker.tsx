@@ -42,6 +42,7 @@ export function FoodStampMaker({ areaName }: Props) {
   const [pickedImg, setPickedImg] = useState<HTMLImageElement | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [dishName, setDishName] = useState("");
+  const [memo, setMemo] = useState("");
   const [recog, setRecog] = useState<FoodRecognition | null>(null);
   const [stamps, setStamps] = useState<FoodStamp[]>(() => loadStamps());
   const [justStamped, setJustStamped] = useState<FoodStamp | null>(null);
@@ -51,6 +52,7 @@ export function FoodStampMaker({ areaName }: Props) {
     setPickedImg(null);
     setPreviewUrl(null);
     setDishName("");
+    setMemo("");
     setRecog(null);
   };
 
@@ -94,6 +96,7 @@ export function FoodStampMaker({ areaName }: Props) {
       oneLine: recog?.oneLine ?? "",
       imageDataUrl: makeStampDataUrl(pickedImg, name),
       eatenAt: new Date().toISOString(),
+      memo: memo.trim(),
     };
     const next = saveStamp(stamp);
     setStamps(next);
@@ -162,6 +165,15 @@ export function FoodStampMaker({ areaName }: Props) {
             />
           </label>
           {recog?.oneLine && <p className="foodstamp-oneline">{recog.oneLine}</p>}
+          <label className="foodstamp-field">
+            <span>思い出メモ（任意）</span>
+            <textarea
+              rows={2}
+              value={memo}
+              placeholder="どこで食べた？ 味の感想は？"
+              onChange={(e) => setMemo(e.target.value)}
+            />
+          </label>
           <div className="foodstamp-actions">
             <button className="locate-button" onClick={onStamp}>
               この名前でスタンプを押す

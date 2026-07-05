@@ -3,10 +3,13 @@ import { useGeolocation } from "./hooks/useGeolocation";
 import { useDescribe } from "./hooks/useDescribe";
 import { useImageSearch, type AreaImageUrls } from "./hooks/useImageSearch";
 import { useVisitHistory } from "./hooks/useVisitHistory";
+import { useTrackRecorder } from "./hooks/useTrackRecorder";
 import HistoryPage from "./components/HistoryPage";
-import type { AreaDescription, Coordinates } from "./types";
+import type { AreaDescription, Coordinates, AreaSpot } from "./types";
 import MapView from "./components/MapView";
 import { FoodStampMaker } from "./components/FoodStampMaker";
+import TrackMapView from "./components/TrackMapView";
+import PhotoDescribe from "./components/PhotoDescribe";
 import "./App.css";
 
 // 依存を増やさないためのインラインSVGアイコン。後で写真に差し替え予定。
@@ -72,9 +75,9 @@ function Icon({ name }: { name: IconName }) {
 }
 
 // カテゴリカードの設定（フィールド名・ラベル・アイコン・色テーマ）
+// グルメは主役として別枠で大きく出すので、ここには入れない（比重を下げた3つ）。
 const categories = [
   { key: "history", label: "簡単な歴史", icon: "history", theme: "ai" },
-  { key: "food", label: "ご当地グルメ", icon: "food", theme: "shu" },
   {
     key: "souvenir",
     label: "おすすめのお土産",
@@ -91,36 +94,64 @@ const loadingMessages = [
   "おすすめの寄り道を探しています…",
 ];
 
+// 現在地からこの距離(km)より遠いスポットは地図に出さない。
+// (「ヤマハ」→本社(浜松) のように、キーワードが遠地の記事に当たるのを防ぐ)
+const MAX_SPOT_KM = 20;
+
+// 2点間のおおよその距離(km)。ハバーサインの公式。
+function distanceKm(a: Coordinates, b: { lat: number; lng: number }): number {
+  const R = 6371;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
 function App() {
   const { getLocation } = useGeolocation();
   const { fetchDescribe } = useDescribe();
-  const { fetchAreaImages } = useImageSearch();
+  const { fetchAreaMedia } = useImageSearch();
   const { records, addRecord, removeRecord } = useVisitHistory();
+  const { sessions, isRecording, startRecording, stopRecording } = useTrackRecorder();
 
   const [data, setData] = useState<AreaDescription | null>(null);
   const [imageUrls, setImageUrls] = useState<AreaImageUrls | null>(null);
+  const [spots, setSpots] = useState<AreaSpot[]>([]);
   const [coords, setCoords] = useState<Coordinates | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [speaking, setSpeaking] = useState(false);
   const [mode, setMode] = useState<"current" | "history" | "food">("current");
   const [memo, setMemo] = useState<string | null>(null);
+  const [showTrackMap, setShowTrackMap] = useState(false);
 
   const handleClick = async () => {
     stopSpeak();
     setLoading(true);
     setError(null);
     setImageUrls(null); // 前回の画像をクリア
+    setSpots([]); // 前回のスポットをクリア
     setMemo(null); // 前回のメモをクリア
     try {
       const coords = await getLocation();
       setCoords(coords);
-      const result = await fetchDescribe(coords);
+      const history = records.map((r) => ({ areaName: r.area.areaName }));
+      const result = await fetchDescribe(coords, history);
       setData(result);
-      // 画像はテキスト表示の妨げにならないよう、後追いで読み込む(失敗時はアイコン表示のまま)
-      fetchAreaImages(result.images)
-        .then(setImageUrls)
-        .catch(() => setImageUrls(null));
+      // 画像・スポットはテキスト表示の妨げにならないよう、後追いで読み込む
+      fetchAreaMedia(result.images)
+        .then(({ images, spots }) => {
+          setImageUrls(images);
+          // 現在地から遠すぎるスポット(キーワードが遠地の記事に当たったもの)は地図から除外。
+          setSpots(spots.filter((s) => distanceKm(coords, s) <= MAX_SPOT_KM));
+        })
+        .catch(() => {
+          setImageUrls(null);
+          setSpots([]);
+        });
     } catch (e) {
       setError(e instanceof Error ? e.message : "不明なエラー");
     } finally {
@@ -177,6 +208,24 @@ function App() {
         )}
       </header>
 
+      {/* サブヘッダー: 散歩の記録は現在地取得と独立して常時操作できる */}
+      <div className="sub-header">
+        <button
+          className={`track-button${isRecording ? " track-button-active" : ""}`}
+          onClick={isRecording ? stopRecording : startRecording}
+          aria-pressed={isRecording}
+        >
+          {isRecording ? "散歩の記録を終了" : "散歩の記録を開始"}
+        </button>
+        <button
+          className={`track-button${showTrackMap ? " track-button-active" : ""}`}
+          onClick={() => setShowTrackMap((prev) => !prev)}
+          aria-pressed={showTrackMap}
+        >
+          {showTrackMap ? "経路を隠す" : "経路を見る"}
+        </button>
+      </div>
+
       {mode === "history" ? (
         <HistoryPage records={records} onRemove={removeRecord} />
       ) : mode === "food" ? (
@@ -185,9 +234,9 @@ function App() {
         <>
           {!loading && !data && (
             <div className="hero">
-              <h1>現在地を調べる</h1>
+              <h1>ふらっと、この街を</h1>
               <p className="hero-sub">
-                ボタンひとつで、今いる街をAIがご案内します。
+                目的がなくても大丈夫。2000円・徒歩20分で楽しめる寄り道を、AIがご提案します。
               </p>
 
               <ol className="howto">
@@ -265,12 +314,8 @@ function App() {
                 </span>
               </div> */}
               {coords && (
-                <div
-                  className="map-frame"
-                  role="img"
-                  aria-label="現在地周辺のマップ"
-                >
-                  <MapView center={coords} />
+                <div className="map-frame" role="img" aria-label="現在地周辺のマップ">
+                  <MapView center={coords} spots={spots} />
                   <span className="map-chip">
                     <Icon name="location" />
                     {data.areaName}
@@ -292,6 +337,8 @@ function App() {
                 {speaking ? "停止" : "音声ガイド"}
               </button>
 
+              <PhotoDescribe coords={coords} />
+
               {/* エリア名 + サマリー */}
               <article className="card hero-card">
                 {imageUrls?.summary && (
@@ -307,8 +354,63 @@ function App() {
                 <p className="card-value">{data.summary}</p>
               </article>
 
-              {/* カテゴリカード（サムネ付き：画像が取れたら写真、なければアイコン） */}
-              <div className="cards-grid">
+              {/* グルメを主役に大きく表示 */}
+              <article className="card food-hero">
+                {imageUrls?.food ? (
+                  <img
+                    className="food-hero-photo"
+                    src={imageUrls.food}
+                    alt="ご当地グルメ"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="thumb thumb-shu food-hero-icon">
+                    <Icon name="food" />
+                  </div>
+                )}
+                <div className="food-hero-body">
+                  <p className="card-label">この街のグルメ</p>
+                  <p className="card-value">{data.food}</p>
+                </div>
+              </article>
+
+              {/* ふらっとプラン（2000円・徒歩20分） */}
+              {data.wanderPicks && data.wanderPicks.length > 0 && (
+                <article className="card wander-card">
+                  <p className="card-label">ふらっとプラン｜2000円・徒歩20分</p>
+                  <ul className="wander-list">
+                    {data.wanderPicks.map((w, i) => (
+                      <li key={i}>
+                        <div className="wander-main">
+                          <span className="wander-name">{w.name}</span>
+                          <span className="wander-price">{w.price}</span>
+                        </div>
+                        <div className="wander-meta">
+                          徒歩{w.walkMin}分・{w.note}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              )}
+
+              {/* この街で使えるお得 */}
+              {data.deals && data.deals.length > 0 && (
+                <article className="card deals-card">
+                  <p className="card-label">この街のお得</p>
+                  <ul className="deals-list">
+                    {data.deals.map((d, i) => (
+                      <li key={i}>
+                        <span className="deal-title">{d.title}</span>
+                        <span className="deal-detail">{d.detail}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              )}
+
+              {/* その他（歴史・お土産・有名人：比重を下げて小さく） */}
+              <div className="cards-grid secondary">
                 {categories.map((c) => (
                   <article key={c.key} className="card">
                     {imageUrls?.[c.key] ? (
@@ -361,6 +463,12 @@ function App() {
             </div>
           )}
         </>
+      )}
+      {showTrackMap && (
+        <TrackMapView
+          sessions={sessions}
+          onClose={() => setShowTrackMap(false)}
+        />
       )}
     </div>
   );
