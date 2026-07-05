@@ -94,20 +94,35 @@ const loadingMessages = [
   "おすすめの寄り道を探しています…",
 ];
 
-// 現在地からこの距離(km)より遠いスポットは地図に出さない。
-// (「ヤマハ」→本社(浜松) のように、キーワードが遠地の記事に当たるのを防ぐ)
-const MAX_SPOT_KM = 20;
+// 地図に出す「ご当地グルメ」ピンの上限。
+const MAX_FOOD_PINS = 10;
 
-// 2点間のおおよその距離(km)。ハバーサインの公式。
-function distanceKm(a: Coordinates, b: { lat: number; lng: number }): number {
-  const R = 6371;
-  const toRad = (d: number) => (d * Math.PI) / 180;
-  const dLat = toRad(b.lat - a.lat);
-  const dLng = toRad(b.lng - a.lng);
-  const h =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
-  return 2 * R * Math.asin(Math.sqrt(h));
+// OpenStreetMap(Overpass API) から現在地1km以内の飲食店を取得してスポット化する。
+// キーワード検索ではなく実在の店舗POIなので、現在地から確実に近い店だけが並ぶ。
+async function fetchNearbyFood(c: Coordinates): Promise<AreaSpot[]> {
+  const query =
+    `[out:json][timeout:15];(` +
+    `node["amenity"~"restaurant|cafe|fast_food|bar|pub"](around:1000,${c.lat},${c.lng});` +
+    `node["shop"~"bakery|confectionery|pastry"](around:1000,${c.lat},${c.lng});` +
+    `);out 60;`;
+  const res = await fetch("https://overpass-api.de/api/interpreter", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: "data=" + encodeURIComponent(query),
+  });
+  if (!res.ok) return [];
+  const data = await res.json();
+  const seen = new Set<string>();
+  const spots: AreaSpot[] = [];
+  for (const el of data.elements ?? []) {
+    const name: string | undefined = el?.tags?.name;
+    if (!name || seen.has(name)) continue;
+    if (typeof el.lat !== "number" || typeof el.lon !== "number") continue;
+    seen.add(name);
+    spots.push({ key: "food", label: name, lat: el.lat, lng: el.lon });
+    if (spots.length >= MAX_FOOD_PINS) break;
+  }
+  return spots;
 }
 
 function App() {
@@ -138,20 +153,17 @@ function App() {
     try {
       const coords = await getLocation();
       setCoords(coords);
+      // 地図には現在地1km以内のご当地グルメを最大10件表示（後追いで読み込む）
+      fetchNearbyFood(coords)
+        .then(setSpots)
+        .catch(() => setSpots([]));
       const history = records.map((r) => ({ areaName: r.area.areaName }));
       const result = await fetchDescribe(coords, history);
       setData(result);
-      // 画像・スポットはテキスト表示の妨げにならないよう、後追いで読み込む
+      // 画像はテキスト表示の妨げにならないよう、後追いで読み込む
       fetchAreaMedia(result.images)
-        .then(({ images, spots }) => {
-          setImageUrls(images);
-          // 現在地から遠すぎるスポット(キーワードが遠地の記事に当たったもの)は地図から除外。
-          setSpots(spots.filter((s) => distanceKm(coords, s) <= MAX_SPOT_KM));
-        })
-        .catch(() => {
-          setImageUrls(null);
-          setSpots([]);
-        });
+        .then(({ images }) => setImageUrls(images))
+        .catch(() => setImageUrls(null));
     } catch (e) {
       setError(e instanceof Error ? e.message : "不明なエラー");
     } finally {
