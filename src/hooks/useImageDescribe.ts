@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import type { Coordinates } from "../types";
+import { compressImage, IMAGE_PRESETS } from "../utils/imageCompress";
 
 export type ImageDescription = {
     areaName: string;
@@ -23,14 +24,14 @@ const API_URL = "/api/describeImage";
 export function useImageDescribe(): UseImageDescribeReturn {
     const fetchImageDescribe = useCallback(
         async (file: File, coords: Coordinates): Promise<ImageDescription> => {
-            const base64 = await fileToBase64(file);
+            const compressed = await compressImage(file, IMAGE_PRESETS.upload);
 
             const response = await fetch(API_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    image: base64,
-                    mimeType: file.type,
+                    image: compressed.base64,
+                    mimeType: compressed.mimeType,
                     lat: coords.lat,
                     lng: coords.lng,
                 }),
@@ -47,16 +48,4 @@ export function useImageDescribe(): UseImageDescribeReturn {
     );
 
     return { fetchImageDescribe };
-}
-
-function fileToBase64(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-            const result = reader.result as string;
-            resolve(result.split(",")[1]);
-        };
-        reader.onerror = () => reject(new Error("画像の読み込みに失敗しました"));
-        reader.readAsDataURL(file);
-    });
 }
