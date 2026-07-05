@@ -3,9 +3,11 @@ import { useGeolocation } from "./hooks/useGeolocation";
 import { useDescribe } from "./hooks/useDescribe";
 import { useImageSearch, type AreaImageUrls } from "./hooks/useImageSearch";
 import { useVisitHistory } from "./hooks/useVisitHistory";
+import { useTrackRecorder } from "./hooks/useTrackRecorder";
 import HistoryPage from "./components/HistoryPage";
 import type { AreaDescription, Coordinates, AreaSpot } from "./types";
 import MapView from "./components/MapView";
+import TrackMapView from "./components/TrackMapView";
 import PhotoDescribe from "./components/PhotoDescribe";
 import "./App.css";
 
@@ -112,6 +114,7 @@ function App() {
   const { fetchDescribe } = useDescribe();
   const { fetchAreaMedia } = useImageSearch();
   const { records, addRecord, removeRecord } = useVisitHistory();
+  const { sessions, isRecording, startRecording, stopRecording } = useTrackRecorder();
 
   const [data, setData] = useState<AreaDescription | null>(null);
   const [imageUrls, setImageUrls] = useState<AreaImageUrls | null>(null);
@@ -122,6 +125,7 @@ function App() {
   const [speaking, setSpeaking] = useState(false);
   const [mode, setMode] = useState<"current" | "history">("current");
   const [memo, setMemo] = useState<string | null>(null);
+  const [showTrackMap, setShowTrackMap] = useState(false);
 
   const handleClick = async () => {
     stopSpeak();
@@ -196,6 +200,24 @@ function App() {
           {mode === "current" ? "履歴" : "戻る"}
         </button>
       </header>
+
+      {/* サブヘッダー: 散歩の記録は現在地取得と独立して常時操作できる */}
+      <div className="sub-header">
+        <button
+          className={`track-button${isRecording ? " track-button-active" : ""}`}
+          onClick={isRecording ? stopRecording : startRecording}
+          aria-pressed={isRecording}
+        >
+          {isRecording ? "散歩の記録を終了" : "散歩の記録を開始"}
+        </button>
+        <button
+          className={`track-button${showTrackMap ? " track-button-active" : ""}`}
+          onClick={() => setShowTrackMap((prev) => !prev)}
+          aria-pressed={showTrackMap}
+        >
+          {showTrackMap ? "経路を隠す" : "経路を見る"}
+        </button>
+      </div>
 
       {mode === "history" ? (
         <HistoryPage records={records} onRemove={removeRecord} />
@@ -377,6 +399,12 @@ function App() {
             </div>
           )}
         </>
+      )}
+      {showTrackMap && (
+        <TrackMapView
+          sessions={sessions}
+          onClose={() => setShowTrackMap(false)}
+        />
       )}
     </div>
   );
