@@ -77,3 +77,18 @@ export type VisitRecord = {
   visitedAt: string;
   visitmemo: string;
 };
+
+/** 軌跡上の1点。 */
+export type TrackPoint = {
+  lat: number;
+  lng: number;
+  t: number; // タイムスタンプ(Date.now())。UTC/ローカルを気にせず数値で持つ。
+};
+
+/** 1回の記録セッション(開始〜停止までの軌跡)。 */
+export type TrackSession = {
+  id: string;
+  startedAt: string; // ISO文字列(表示用)
+  endedAt: string | null; // 記録中は null
+  points: TrackPoint[];
+};
