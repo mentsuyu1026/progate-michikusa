@@ -10,27 +10,29 @@ export type ImageDescription = {
 };
 
 type UseImageDescribeReturn = {
-    fetchImageDescribe: (file: File, coords: Coordinates) => Promise<ImageDescription>;
+    // 写真1枚でも複数枚でも渡せる。複数のときは全体をまとめて1つの解説にする。
+    fetchImageDescribe: (files: File[], coords: Coordinates) => Promise<ImageDescription>;
 };
 
 const API_URL = "/api/describeImage";
 
 /**
- * /api/describe-image を叩いて画像解説を取得するフック。
+ * /api/describeImage を叩いて画像解説を取得するフック。
  * useDescribe と対称に、state は持たず「Promiseを返す関数」だけを提供する。
  * ローディング/エラーの状態管理は呼び出し側に任せる。
  */
 export function useImageDescribe(): UseImageDescribeReturn {
     const fetchImageDescribe = useCallback(
-        async (file: File, coords: Coordinates): Promise<ImageDescription> => {
-            const base64 = await fileToBase64(file);
+        async (files: File[], coords: Coordinates): Promise<ImageDescription> => {
+            const images = await Promise.all(
+                files.map(async (f) => ({ data: await fileToBase64(f), mimeType: f.type })),
+            );
 
             const response = await fetch(API_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    image: base64,
-                    mimeType: file.type,
+                    images,
                     lat: coords.lat,
                     lng: coords.lng,
                 }),

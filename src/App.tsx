@@ -91,9 +91,9 @@ const loadingMessages = [
   "おすすめの寄り道を探しています…",
 ];
 
-// 現在地からこの距離(km)より遠いスポットは地図に出さない。
-// (「ヤマハ」→本社(浜松) のように、キーワードが遠地の記事に当たるのを防ぐ)
-const MAX_SPOT_KM = 20;
+// 現在地からこの距離(km)より遠いご当地グルメスポットは地図に出さない。
+// 「半径1km以内の徒歩圏のグルメ」に絞る。
+const MAX_SPOT_KM = 1;
 
 // 2点間のおおよその距離(km)。ハバーサインの公式。
 function distanceKm(a: Coordinates, b: { lat: number; lng: number }): number {
@@ -138,18 +138,26 @@ function App() {
       const history = records.map((r) => ({ areaName: r.area.areaName }));
       const result = await fetchDescribe(coords, history);
       setData(result);
-      // 画像・スポットはテキスト表示の妨げにならないよう、後追いで読み込む
+      // 地図には現在地から半径1km以内のご当地グルメの場所だけを表示する。
+      const foodSpots: AreaSpot[] = (result.foodSpots ?? [])
+        .filter((s) => distanceKm(coords, s) <= MAX_SPOT_KM)
+        .map((s) => ({
+          key: "food" as const,
+          // 地図には店名は出さず、ご当地グルメ名だけを表示する(なければ場所名で代替)。
+          label: s.food || s.name,
+          lat: s.lat,
+          lng: s.lng,
+        }));
+      setSpots(foodSpots);
+      // 画像はテキスト表示の妨げにならないよう、後追いで読み込む(地図には使わない)
       fetchAreaMedia(result.images)
-        .then(({ images, captions, spots }) => {
+        .then(({ images, captions }) => {
           setImageUrls(images);
           setCaptions(captions);
-          // 現在地から遠すぎるスポット(キーワードが遠地の記事に当たったもの)は地図から除外。
-          setSpots(spots.filter((s) => distanceKm(coords, s) <= MAX_SPOT_KM));
         })
         .catch(() => {
           setImageUrls(null);
           setCaptions(null);
-          setSpots([]);
         });
     } catch (e) {
       setError(e instanceof Error ? e.message : "不明なエラー");

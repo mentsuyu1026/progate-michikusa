@@ -5,6 +5,19 @@
     gap: 12px;
 }
 
+/* 複数写真のプレビュー(横並び) */
+.photo-previews {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.photo-previews img {
+    width: 88px;
+    height: 88px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
 .photo-describe-button {
     width: 100%;
     padding: 12px 16px;

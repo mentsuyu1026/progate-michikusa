@@ -38,12 +38,18 @@ const RESPONSE_SCHEMA = {
 
 /**
  * プロンプト。特定できないときに無理をせず「風景として」語らせるのがポイント。
+ * count が複数のときは、全ての写真をまとめて1つの解説にする。
  */
-export function buildImagePrompt(areaName: string): string {
+export function buildImagePrompt(areaName: string, count = 1): string {
+    const many = count > 1;
     return [
         `あなたは日本各地の観光案内に詳しいガイドです。`,
-        `添付された写真は「${areaName}」付近で撮影されました。`,
-        `写真の被写体を、その土地の文脈と絡めて旅行者向けにやさしく紹介してください。`,
+        many
+            ? `添付された${count}枚の写真は、いずれも「${areaName}」付近で撮影されました。`
+            : `添付された写真は「${areaName}」付近で撮影されました。`,
+        many
+            ? `これらの写真全体をひとまとめに見て、共通する被写体やその土地の雰囲気を、旅行者向けにやさしく紹介してください。`
+            : `写真の被写体を、その土地の文脈と絡めて旅行者向けにやさしく紹介してください。`,
         ``,
         `条件:`,
         `- 日本語で、親しみやすく簡潔に書く。`,
@@ -54,12 +60,18 @@ export function buildImagePrompt(areaName: string): string {
     ].join("\n");
 }
 
+/** 1枚の画像入力(base64データ + MIMEタイプ)。 */
+export type ImageInput = {
+    data: string;
+    mimeType: string;
+};
+
 /**
- * 画像 + 地域名から構造化された解説JSONを生成する。
+ * 画像(1枚以上) + 地域名から構造化された解説JSONを生成する。
+ * 複数枚渡すと、全ての写真をまとめて1つの解説にする。
  */
 export async function generateImageDescription(
-    imageBase64: string,
-    mimeType: string,
+    images: ImageInput[],
     areaName: string,
     opts: GenerateOptions = {}
 ): Promise<ImageDescription> {
@@ -67,11 +79,9 @@ export async function generateImageDescription(
     if (!name) {
         throw new Error("areaName が空です。地域名を指定してください。");
     }
-    if (!imageBase64) {
+    const imgs = (images ?? []).filter((im) => im?.data && im?.mimeType);
+    if (imgs.length === 0) {
         throw new Error("画像データがありません。");
-    }
-    if (!mimeType) {
-        throw new Error("画像の mimeType がありません。");
     }
 
     const apiKey = opts.apiKey ?? process.env.GEMINI_API_KEY;
@@ -89,8 +99,9 @@ export async function generateImageDescription(
         contents: [
             {
                 parts: [
-                    { inlineData: { mimeType, data: imageBase64 } },
-                    { text: buildImagePrompt(name) },
+                    // 複数枚の画像を同時に渡す。最後にテキスト指示。
+                    ...imgs.map((im) => ({ inlineData: { mimeType: im.mimeType, data: im.data } })),
+                    { text: buildImagePrompt(name, imgs.length) },
                 ],
             },
         ],

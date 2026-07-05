@@ -17,6 +17,8 @@ type ApiResponse = {
 };
 
 type DescribeImageBody = {
+    // 複数画像(推奨)。もしくは単一の image + mimeType(後方互換)。
+    images?: { data?: string; mimeType?: string }[];
     image?: string;
     mimeType?: string;
     areaName?: string;
@@ -36,11 +38,23 @@ export default async function handler(req: ApiRequest, res: ApiResponse): Promis
                 ? JSON.parse(req.body || "{}")
                 : (req.body as DescribeImageBody) ?? {};
 
-        const { image, mimeType, lat, lng } = body;
+        const { images, image, mimeType, lat, lng } = body;
         let { areaName } = body;
 
-        if (!image || !mimeType) {
-            res.status(400).json({ error: "image(base64)と mimeType が必要です。" });
+        // 複数画像(images)を優先。無ければ単一の image + mimeType を1枚として扱う。
+        const imgs =
+            images && images.length > 0
+                ? images
+                      .filter((im): im is { data: string; mimeType: string } =>
+                          Boolean(im?.data && im?.mimeType),
+                      )
+                      .slice(0, 4) // 送りすぎ防止(最大4枚)
+                : image && mimeType
+                  ? [{ data: image, mimeType }]
+                  : [];
+
+        if (imgs.length === 0) {
+            res.status(400).json({ error: "image(base64)と mimeType、または images 配列が必要です。" });
             return;
         }
 
@@ -53,7 +67,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse): Promis
             return;
         }
 
-        const result = await generateImageDescription(image, mimeType, areaName);
+        const result = await generateImageDescription(imgs, areaName);
         res.status(200).json(result);
     } catch (err) {
         console.error("[/api/describe-image] error:", err);

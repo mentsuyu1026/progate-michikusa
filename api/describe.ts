@@ -59,7 +59,9 @@ export default async function handler(req: ApiRequest, res: ApiResponse): Promis
           .map((h) => ({ areaName: h.areaName }))
       : [];
 
-    const result = await generateAreaDescription(areaName, { history: safeHistory });
+    // 座標があれば渡し、ご当地グルメスポットを現在地の近くに寄せてもらう。
+    const coords = lat != null && lng != null ? { lat, lng } : undefined;
+    const result = await generateAreaDescription(areaName, { history: safeHistory, coords });
     res.status(200).json(result);
   } catch (err) {
     // レスポンスが崩れたとき等のエラーハンドリング(仕様書STEP5)。

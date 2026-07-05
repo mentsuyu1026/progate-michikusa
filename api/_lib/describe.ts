@@ -17,6 +17,18 @@ export type AreaImageQueries = {
   celebrity: string;
 };
 
+/**
+ * 地図に表示する「ご当地グルメの具体的な場所」1件分。
+ * 飲食店・市場・食べ歩きスポットなどは Wikipedia 記事がほぼ無く座標が取れないため、
+ * Gemini に名前と座標を直接生成させる(座標はおおよその近似)。
+ */
+export type AreaFoodSpot = {
+  name: string; // 店名・市場名・食べ歩きスポット名など具体的な場所の名前
+  food: string; // そこで味わえるご当地グルメ(料理名・名物)
+  lat: number;
+  lng: number;
+};
+
 /** 生成された解説の構造化結果。STEP2フォーマット + フロント互換フィールド。 */
 export type AreaDescription = {
   areaName: string;
@@ -28,6 +40,8 @@ export type AreaDescription = {
   description: string;
   /** 各項目の画像検索キーワード(実写取得用) */
   images: AreaImageQueries;
+  /** 現在地周辺の、ご当地グルメを味わえる具体的な場所(地図に表示する) */
+  foodSpots: AreaFoodSpot[];
 };
 
 export type VisitHistoryItem = {
@@ -42,6 +56,8 @@ type GenerateOptions = {
   /** テスト用の fetch 差し替え */
   fetchImpl?: typeof fetch;
   history?: VisitHistoryItem[];
+  /** 現在地の座標。あれば foodSpots をこの近くに寄せてもらう。 */
+  coords?: { lat: number; lng: number };
 };
 
 /** Gemini が返す生のJSON(description はこちらでは作らない)。 */
@@ -52,6 +68,7 @@ type GeminiPayload = {
   souvenir: string;
   celebrity: string;
   images: AreaImageQueries;
+  foodSpots: AreaFoodSpot[];
 };
 
 // 使用する Gemini モデル(無料枠・高速)。必要なら GEMINI_MODEL env で上書き可。
@@ -80,15 +97,34 @@ const RESPONSE_SCHEMA = {
       },
       required: ["summary", "history", "food", "souvenir", "celebrity"],
     },
+    // 現在地周辺の、ご当地グルメを味わえる具体的な場所(地図に表示する)。
+    foodSpots: {
+      type: "array",
+      description: "現在地から半径1km以内(徒歩圏)で、ご当地グルメを実際に味わえる具体的な場所を3〜5件",
+      items: {
+        type: "object",
+        properties: {
+          name: { type: "string", description: "店名・食堂・市場・商店街・食べ歩きスポットなど実在する具体的な場所の名前" },
+          food: { type: "string", description: "その場所で味わえるご当地グルメ(料理名・名物)" },
+          lat: { type: "number", description: "その場所のおおよその緯度" },
+          lng: { type: "number", description: "その場所のおおよその経度" },
+        },
+        required: ["name", "food", "lat", "lng"],
+      },
+    },
   },
-  required: ["summary", "history", "food", "souvenir", "celebrity", "images"],
+  required: ["summary", "history", "food", "souvenir", "celebrity", "images", "foodSpots"],
 };
 
 /**
  * Gemini に渡すプロンプトを組み立てる。
  * リスク対策(仕様書9章): 不確かなことは断定させない。
  */
-export function buildPrompt(areaName: string, history: VisitHistoryItem[] = []): string {
+export function buildPrompt(
+  areaName: string,
+  history: VisitHistoryItem[] = [],
+  coords?: { lat: number; lng: number }
+): string {
   const lines = [
     `あなたは日本各地の観光案内に詳しいガイドです。`,
     `「${areaName}」について、その土地を初めて訪れた旅行者向けに、特色・歴史・文化をやさしく紹介してください。`,
@@ -125,9 +161,24 @@ export function buildPrompt(areaName: string, history: VisitHistoryItem[] = []):
     `  ・各項目で必ず別々の被写体を選ぶ(4枚が同じ建物・同じ写真にならないようにする)。`,
     `  ・images.food / images.souvenir / images.history / images.summary は「モノ・場所」にし、`,
     `    人物名にしない(料理・菓子・建物・工芸品・風景など)。人物を指定してよいのは images.celebrity だけ。`,
-    `  ・有名な対象が思いつかない項目は、無理に地名を足さず、その分野で最も知られた固有名詞にする。`
+    `  ・有名な対象が思いつかない項目は、無理に地名を足さず、その分野で最も知られた固有名詞にする。`,
+    ``,
+    `- foodSpots として、現在地から半径1km以内(徒歩圏)で「ご当地グルメ」を実際に味わえる具体的な場所を3〜5件挙げる。`,
+    `  ・name: 店名・食堂・市場・商店街・食べ歩きスポットなど、実在する具体的な場所の名前にする。`,
+    `  ・food: その場所で味わえるご当地グルメ(料理名・名物)。`,
+    `  ・lat / lng: その場所のおおよその緯度・経度。必ず現在地から半径1km以内にする。`,
+    `  ・料理そのものではなく「実際に行ける場所」を挙げる(地図にピンを立てるため座標が必須)。`,
+    `  ・必ず3件以上5件以下にする。半径1km以内で見つからない場合は、確実に半径1km以内にある店に絞って無理のない範囲で挙げる。`
   );
-  
+
+  if (coords) {
+    lines.push(
+      ``,
+      `現在地の座標: 緯度 ${coords.lat}, 経度 ${coords.lng}`,
+      `foodSpots はこの座標から半径1km以内にある実在の場所だけにすること。`
+    );
+  }
+
   return lines.join("\n");
 }
 
@@ -155,7 +206,7 @@ export async function generateAreaDescription(
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
   const body = {
-    contents: [{ parts: [{ text: buildPrompt(name, opts.history ?? []) }] }],
+    contents: [{ parts: [{ text: buildPrompt(name, opts.history ?? [], opts.coords) }] }],
     generationConfig: {
       temperature: 0.7,
       responseMimeType: "application/json",
@@ -209,6 +260,24 @@ export async function generateAreaDescription(
     celebrity: img.celebrity || `${name} 出身 有名人`,
   };
 
+  // ご当地グルメスポット: 座標が数値で名前があるものだけ採用し、最大5件に制限する。
+  const rawSpots = Array.isArray(parsed.foodSpots) ? parsed.foodSpots : [];
+  const foodSpots: AreaFoodSpot[] = rawSpots
+    .filter(
+      (s): s is AreaFoodSpot =>
+        Boolean(s) &&
+        Number.isFinite(s.lat) &&
+        Number.isFinite(s.lng) &&
+        Boolean((s.name ?? "").trim())
+    )
+    .slice(0, 5)
+    .map((s) => ({
+      name: String(s.name).trim(),
+      food: String(s.food ?? "").trim(),
+      lat: s.lat,
+      lng: s.lng,
+    }));
+
   return {
     areaName: name,
     summary: parsed.summary ?? "",
@@ -218,5 +287,6 @@ export async function generateAreaDescription(
     celebrity: parsed.celebrity ?? "",
     description,
     images,
+    foodSpots,
   };
 }

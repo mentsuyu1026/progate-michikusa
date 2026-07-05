@@ -83,8 +83,9 @@ function MapView({ center, spots = [] }: MapViewProps) {
                     現在地
                 </Tooltip>
             </Marker>
-            {spots.map((s) => (
-                <Marker key={s.key} position={[s.lat, s.lng]} icon={SPOT_ICON}>
+            {spots.map((s, i) => (
+                // 同カテゴリ(グルメ)のスポットが複数並ぶため、キーは座標＋indexで一意にする。
+                <Marker key={`${s.key}-${i}-${s.lat},${s.lng}`} position={[s.lat, s.lng]} icon={SPOT_ICON}>
                     <Tooltip permanent direction="top" className="spot-tooltip">
                         <span className="spot-cat">{SPOT_LABELS[s.key]}</span>
                         {s.label}

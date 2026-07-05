@@ -28,6 +28,21 @@ export type AreaImageQueries = {
 };
 
 /**
+ * 地図に表示する「ご当地グルメの具体的な場所」1件分。
+ * 飲食店・市場・食べ歩きスポットは Wikipedia 記事がほぼ無く座標が取れないため、
+ * LLM が名前と座標を直接生成する(座標はおおよその近似)。
+ * - name: 店名・市場名など具体的な場所の名前
+ * - food: そこで味わえるご当地グルメ(料理名・名物)
+ * - lat/lng: 緯度・経度
+ */
+export type AreaFoodSpot = {
+  name: string;
+  food: string;
+  lat: number;
+  lng: number;
+};
+
+/**
  * LLMが生成する地域解説の型(/api/describe のレスポンス)
  * summary/history/food/souvenir/celebrity = STEP2で決めた出力フォーマット
  * areaName/description = フロント互換の概要フィールド
@@ -43,6 +58,8 @@ export type AreaDescription = {
   celebrity: string;
   description: string;
   images: AreaImageQueries;
+  /** 現在地周辺の、ご当地グルメを味わえる具体的な場所(地図に表示する) */
+  foodSpots?: AreaFoodSpot[];
 };
 
 /**
