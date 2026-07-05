@@ -9,36 +9,36 @@ type Props = {
     onClose: () => void;
 };
 
-// ダミーデータ有効化フラグ。デモ後は false にするか、この定数ごと削除する。
-const USE_DUMMY_DATA = true;
+// // ダミーデータ有効化フラグ。デモ後は false にするか、この定数ごと削除する。
+// const USE_DUMMY_DATA = true;
 
-// デモ用のダミーセッション。実データが空のときだけ使う。
-// 東京駅周辺を歩いたことにしてある。
-const DUMMY_SESSIONS: TrackSession[] = [
-    {
-        id: "dummy-1",
-        startedAt: "2026-07-01T10:00:00.000Z",
-        endedAt: "2026-07-01T10:30:00.000Z",
-        points: [
-            { lat: 35.6812, lng: 139.7671, t: 0 },
-            { lat: 35.6820, lng: 139.7680, t: 1 },
-            { lat: 35.6828, lng: 139.7690, t: 2 },
-            { lat: 35.6835, lng: 139.7695, t: 3 },
-            { lat: 35.6840, lng: 139.7688, t: 4 },
-        ],
-    },
-    {
-        id: "dummy-2",
-        startedAt: "2026-07-02T14:00:00.000Z",
-        endedAt: "2026-07-02T14:20:00.000Z",
-        points: [
-            { lat: 35.6805, lng: 139.7660, t: 0 },
-            { lat: 35.6800, lng: 139.7670, t: 1 },
-            { lat: 35.6795, lng: 139.7685, t: 2 },
-            { lat: 35.6800, lng: 139.7700, t: 3 },
-        ],
-    },
-];
+// // デモ用のダミーセッション。実データが空のときだけ使う。
+// // 東京駅周辺を歩いたことにしてある。
+// const DUMMY_SESSIONS: TrackSession[] = [
+//     {
+//         id: "dummy-1",
+//         startedAt: "2026-07-01T10:00:00.000Z",
+//         endedAt: "2026-07-01T10:30:00.000Z",
+//         points: [
+//             { lat: 35.6812, lng: 139.7671, t: 0 },
+//             { lat: 35.6820, lng: 139.7680, t: 1 },
+//             { lat: 35.6828, lng: 139.7690, t: 2 },
+//             { lat: 35.6835, lng: 139.7695, t: 3 },
+//             { lat: 35.6840, lng: 139.7688, t: 4 },
+//         ],
+//     },
+//     {
+//         id: "dummy-2",
+//         startedAt: "2026-07-02T14:00:00.000Z",
+//         endedAt: "2026-07-02T14:20:00.000Z",
+//         points: [
+//             { lat: 35.6805, lng: 139.7660, t: 0 },
+//             { lat: 35.6800, lng: 139.7670, t: 1 },
+//             { lat: 35.6795, lng: 139.7685, t: 2 },
+//             { lat: 35.6800, lng: 139.7700, t: 3 },
+//         ],
+//     },
+// ];
 
 function TrackMapView({ sessions, onClose }: Props) {
     const [currentPos, setCurrentPos] = useState<{ lat: number; lng: number } | null>(null);
@@ -69,8 +69,8 @@ function TrackMapView({ sessions, onClose }: Props) {
     }, []);
 
     // 描画するセッション: 実データがあればそれ、なければダミー(フラグが有効なとき)
-    const displaySessions =
-        sessions.length > 0 ? sessions : USE_DUMMY_DATA ? DUMMY_SESSIONS : [];
+    const displaySessions = sessions
+        // sessions.length > 0 ? sessions : USE_DUMMY_DATA ? DUMMY_SESSIONS : [];
 
     return (
         <div className="track-modal-backdrop" onClick={onClose}>
