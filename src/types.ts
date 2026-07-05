@@ -34,6 +34,20 @@ export type AreaImageQueries = {
  * images = 各項目の画像検索キーワード(実写取得用)
  * ※ api/_lib/describe.ts の AreaDescription と同じ形。片方を変えたらもう片方も合わせること
  */
+/** ふらっと来た人向けの提案（2000円以内・徒歩20分以内）。 */
+export type WanderPick = {
+  name: string;
+  price: string; // ¥表記の目安（無料なら「無料」）
+  walkMin: number; // 徒歩目安（分）
+  note: string;
+};
+
+/** その地域で使えるお得・メリットのあるサービス。 */
+export type LocalDeal = {
+  title: string;
+  detail: string;
+};
+
 export type AreaDescription = {
   areaName: string;
   summary: string;
@@ -43,6 +57,10 @@ export type AreaDescription = {
   celebrity: string;
   description: string;
   images: AreaImageQueries;
+  /** ふらっと向けの提案（古い保存データには無い場合があるので任意） */
+  wanderPicks?: WanderPick[];
+  /** その街で使えるお得（古い保存データには無い場合があるので任意） */
+  deals?: LocalDeal[];
 };
 
 /**
@@ -76,6 +94,37 @@ export type VisitRecord = {
   coords: Coordinates;
   visitedAt: string;
   visitmemo: string;
+};
+
+/**
+ * 料理写真をGemini Visionで認識した結果（/api/food-stamp のレスポンス）。
+ * - isFood: 写真に料理が写っているか
+ * - dishName: 料理名
+ * - oneLine: その料理の一言紹介
+ * - specialties: その土地の名物リスト（再訪の"あと◯品"表示に使う）
+ * - nextDish: 次におすすめの一品（再訪誘導）
+ */
+export type FoodRecognition = {
+  isFood: boolean;
+  dishName: string;
+  oneLine: string;
+  specialties: string[];
+  nextDish: string;
+};
+
+/**
+ * 御朱印帳に貯める「グルメスタンプ」1件。localStorageに保存する。
+ * - imageDataUrl: 撮った写真から作った御朱印風スタンプ画像（dataURL）
+ */
+export type FoodStamp = {
+  id: string;
+  dishName: string;
+  areaName: string;
+  oneLine: string;
+  imageDataUrl: string;
+  eatenAt: string;
+  /** 食べたときの思い出メモ（御朱印帳から見返せる）。 */
+  memo: string;
 };
 
 /** 軌跡上の1点。 */

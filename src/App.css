@@ -532,10 +532,138 @@
   margin-bottom: 14px;
 }
 
-/* スマホ：カテゴリも1カラム */
+/* グルメを主役に：大きなカード（朱色の枠で強調） */
+.food-hero {
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid var(--vermilion);
+}
+.food-hero-photo {
+  display: block;
+  width: 100%;
+  height: 240px;
+  object-fit: cover;
+}
+.food-hero-icon {
+  height: 150px;
+  border-radius: 0;
+  margin: 0;
+}
+.food-hero-body {
+  padding: 16px 20px 18px;
+}
+.food-hero .card-label {
+  color: var(--vermilion);
+  font-size: 13px;
+}
+.food-hero .card-value {
+  font-size: 16px;
+}
+
+/* ふらっとプラン（2000円・徒歩20分） */
+.wander-card {
+  border-left: 4px solid var(--vermilion);
+}
+.wander-list,
+.deals-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.wander-list li {
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+.wander-list li:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+.wander-main {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.wander-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+.wander-price {
+  flex: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--vermilion);
+  padding: 2px 10px;
+  border-radius: 999px;
+}
+.wander-meta {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.6;
+}
+
+/* この街のお得 */
+.deals-card {
+  border-left: 4px solid var(--gold);
+}
+.deals-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.deal-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+.deal-title::before {
+  content: "🉐 ";
+}
+.deal-detail {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.6;
+}
+
+/* その他カテゴリ（歴史・お土産・有名人）は比重を下げてコンパクトに（3カラム） */
+.cards-grid.secondary {
+  grid-template-columns: repeat(3, 1fr);
+}
+.cards-grid.secondary .card {
+  padding: 12px;
+}
+.cards-grid.secondary .thumb {
+  height: 60px;
+  margin-bottom: 8px;
+}
+.cards-grid.secondary .thumb-photo {
+  height: 60px;
+  object-fit: cover;
+}
+.cards-grid.secondary .card-label {
+  font-size: 11px;
+}
+.cards-grid.secondary .card-value {
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+/* スマホ：カテゴリも1カラム（その他は3カラム維持でコンパクト） */
 @media (max-width: 560px) {
   .cards-grid {
     grid-template-columns: 1fr;
+  }
+  .cards-grid.secondary {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .food-hero-photo {
+    height: 200px;
   }
 }
 

@@ -7,6 +7,7 @@ import { useTrackRecorder } from "./hooks/useTrackRecorder";
 import HistoryPage from "./components/HistoryPage";
 import type { AreaDescription, Coordinates, AreaSpot } from "./types";
 import MapView from "./components/MapView";
+import { FoodStampMaker } from "./components/FoodStampMaker";
 import TrackMapView from "./components/TrackMapView";
 import PhotoDescribe from "./components/PhotoDescribe";
 import "./App.css";
@@ -74,9 +75,9 @@ function Icon({ name }: { name: IconName }) {
 }
 
 // カテゴリカードの設定（フィールド名・ラベル・アイコン・色テーマ）
+// グルメは主役として別枠で大きく出すので、ここには入れない（比重を下げた3つ）。
 const categories = [
   { key: "history", label: "簡単な歴史", icon: "history", theme: "ai" },
-  { key: "food", label: "ご当地グルメ", icon: "food", theme: "shu" },
   {
     key: "souvenir",
     label: "おすすめのお土産",
@@ -123,7 +124,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [speaking, setSpeaking] = useState(false);
-  const [mode, setMode] = useState<"current" | "history">("current");
+  const [mode, setMode] = useState<"current" | "history" | "food">("current");
   const [memo, setMemo] = useState<string | null>(null);
   const [showTrackMap, setShowTrackMap] = useState(false);
 
@@ -191,14 +192,20 @@ function App() {
           <Icon name="pin" />
           みちくさ
         </span>
-        <button
-          className="header-toggle"
-          onClick={() =>
-            setMode((prev) => (prev === "current" ? "history" : "current"))
-          }
-        >
-          {mode === "current" ? "履歴" : "戻る"}
-        </button>
+        {mode === "current" ? (
+          <span style={{ display: "flex", gap: 8 }}>
+            <button className="header-toggle" onClick={() => setMode("food")}>
+              グルメ
+            </button>
+            <button className="header-toggle" onClick={() => setMode("history")}>
+              履歴
+            </button>
+          </span>
+        ) : (
+          <button className="header-toggle" onClick={() => setMode("current")}>
+            戻る
+          </button>
+        )}
       </header>
 
       {/* サブヘッダー: 散歩の記録は現在地取得と独立して常時操作できる */}
@@ -221,13 +228,15 @@ function App() {
 
       {mode === "history" ? (
         <HistoryPage records={records} onRemove={removeRecord} />
+      ) : mode === "food" ? (
+        <FoodStampMaker areaName={data?.areaName} />
       ) : (
         <>
           {!loading && !data && (
             <div className="hero">
-              <h1>現在地を調べる</h1>
+              <h1>ふらっと、この街を</h1>
               <p className="hero-sub">
-                ボタンひとつで、今いる街をAIがご案内します。
+                目的がなくても大丈夫。2000円・徒歩20分で楽しめる寄り道を、AIがご提案します。
               </p>
 
               <ol className="howto">
@@ -345,8 +354,63 @@ function App() {
                 <p className="card-value">{data.summary}</p>
               </article>
 
-              {/* カテゴリカード（サムネ付き：画像が取れたら写真、なければアイコン） */}
-              <div className="cards-grid">
+              {/* グルメを主役に大きく表示 */}
+              <article className="card food-hero">
+                {imageUrls?.food ? (
+                  <img
+                    className="food-hero-photo"
+                    src={imageUrls.food}
+                    alt="ご当地グルメ"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="thumb thumb-shu food-hero-icon">
+                    <Icon name="food" />
+                  </div>
+                )}
+                <div className="food-hero-body">
+                  <p className="card-label">この街のグルメ</p>
+                  <p className="card-value">{data.food}</p>
+                </div>
+              </article>
+
+              {/* ふらっとプラン（2000円・徒歩20分） */}
+              {data.wanderPicks && data.wanderPicks.length > 0 && (
+                <article className="card wander-card">
+                  <p className="card-label">ふらっとプラン｜2000円・徒歩20分</p>
+                  <ul className="wander-list">
+                    {data.wanderPicks.map((w, i) => (
+                      <li key={i}>
+                        <div className="wander-main">
+                          <span className="wander-name">{w.name}</span>
+                          <span className="wander-price">{w.price}</span>
+                        </div>
+                        <div className="wander-meta">
+                          徒歩{w.walkMin}分・{w.note}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              )}
+
+              {/* この街で使えるお得 */}
+              {data.deals && data.deals.length > 0 && (
+                <article className="card deals-card">
+                  <p className="card-label">この街のお得</p>
+                  <ul className="deals-list">
+                    {data.deals.map((d, i) => (
+                      <li key={i}>
+                        <span className="deal-title">{d.title}</span>
+                        <span className="deal-detail">{d.detail}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              )}
+
+              {/* その他（歴史・お土産・有名人：比重を下げて小さく） */}
+              <div className="cards-grid secondary">
                 {categories.map((c) => (
                   <article key={c.key} className="card">
                     {imageUrls?.[c.key] ? (
